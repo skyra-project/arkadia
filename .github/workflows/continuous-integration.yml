@@ -1,0 +1,89 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  DotNetCI:
+    name: Dotnet Build & Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ghcr.io/skyra-project/postgres:latest
+        env:
+          POSTGRES_DB: skyra-dotnet-test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+      - name: Restore CI Cache
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+      - name: Build C# code
+        run: dotnet build
+      - name: Run C# unit tests
+        run: dotnet test Skyra.UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+      - name: Run C# integration tests
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install dotnet-ef
+          dotnet tool run dotnet-ef database update --project Skyra.Database
+          dotnet run --project Skyra.Grpc &
+          while ! nc -z localhost 8291; do
+            sleep 0.1 # wait for 1/10 of the second before check again
+          done
+          dotnet test Skyra.IntegrationTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+        env:
+          POSTGRES_DB: skyra-dotnet-test
+      - name: Store code coverage report (Unit Tests)
+        uses: actions/upload-artifact@v2
+        with:
+          name: dotnet-coverage-unit
+          path: Skyra.UnitTests/TestResults/
+      - name: Store code coverage report (Integration Tests)
+        uses: actions/upload-artifact@v2
+        with:
+          name: dotnet-coverage-integration
+          path: Skyra.IntegrationTests/TestResults/
+
+  Upload_Coverage_Report:
+    name: Upload coverage report to codecov
+    needs: DotNetCI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Download DotNet Unit Test Coverage report
+        uses: actions/download-artifact@v2
+        with:
+          name: dotnet-coverage-unit
+          path: Skyra.UnitTests/TestResults/
+      - name: Download DotNet IT Coverage report
+        uses: actions/download-artifact@v2
+        with:
+          name: dotnet-coverage-integration
+          path: Skyra.IntegrationTests/TestResults/
+      - name: Codecov Upload
+        uses: codecov/codecov-action@v2.0.2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true

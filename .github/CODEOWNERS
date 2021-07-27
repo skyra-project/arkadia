@@ -1,0 +1,15 @@
+# Just Kyra
+/LICENSE @kyranet
+
+# Just Favna
+/.github/ @favna
+/.devcontainer/ @favna
+/.vscode/ @favna
+/.gitignore @favna
+
+# Tyler & Kyra
+/Skyra.Database/ @Tylertron1998 @kyranet
+/Skyra.Grpc/ @Tylertron1998 @kyranet
+/Skyra.IntegrationTests/ @Tylertron1998 @kyranet
+/Skyra.Shared/ @Tylertron1998 @kyranet
+/Skyra.UnitTests/ @Tylertron1998 @kyranet
