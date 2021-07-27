@@ -1,6 +1,7 @@
 {
-	"name": "Node-TS PowerUser Image",
-	"image": "favware/codespaces-containers:with-node-canvas",
+	"name": "DotNet Image",
+	// TODO: I need to actually make a C# image
+	"image": "favware/codespaces-containers:base",
 
 	// VSCode settings
 	"settings": {
@@ -13,7 +14,6 @@
 			"source.fixAll.tslint": true,
 			"source.organizeImports": true
 		},
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
 		"editor.foldingStrategy": "auto",
 		"editor.fontFamily": "Fira Code, MesloLGS NF",
 		"editor.renderWhitespace": "all",
@@ -26,14 +26,8 @@
 		"editor.renderControlCharacters": true,
 		"editor.snippetSuggestions": "top",
 		"editor.suggestSelection": "first",
-		"eslint.lintTask.enable": true,
-		"eslint.packageManager": "yarn",
 		"extensions.ignoreRecommendations": false,
 		"files.associations": {
-			"*.pipeline": "groovy",
-			".all-contributorsrc": "json",
-			".yarnclean": "ignore",
-			".yarnrc": "shellscript",
 			"CODEOWNERS": "ignore"
 		},
 		"files.autoSave": "afterDelay",
@@ -56,22 +50,10 @@
 			"rgba(16,16,16,1.0)"
 		],
 		"indentRainbow.errorColor": "rgba(0,0,0,0.0)",
-		"javascript.updateImportsOnFileMove.enabled": "always",
-		"prettier.packageManager": "yarn",
-		"prettier.requireConfig": true,
-		"prettier.resolveGlobalModules": true,
 		"tabnine.experimentalAutoImports": false,
 		"terminal.integrated.copyOnSelection": true,
 		"terminal.integrated.fontFamily": "MesloLGS NF",
 		"terminal.integrated.rendererType": "experimentalWebgl",
-		"typescript.tsserver.log": "off",
-		"typescript.tsserver.useSeparateSyntaxServer": true,
-		"typescript.tsserver.watchOptions": {
-			"fallbackPolling": "dynamicPriorityPolling",
-			"watchDirectory": "dynamicPriorityPolling",
-			"watchFile": "useFsEvents"
-		},
-		"typescript.updateImportsOnFileMove.enabled": "always",
 		"window.zoomLevel": 0,
 		"workbench.colorTheme": "Atom One Dark",
 		"workbench.editor.scrollToSwitchTabs": true,
@@ -81,18 +63,15 @@
 
 	// VSCode Extension by their IDs
 	"extensions": [
-		"dbaeumer.vscode-eslint",
 		"coenraads.bracket-pair-colorizer",
 		"bierner.github-markdown-preview",
+		"ms-dotnettools.csharp",
 		"eamodio.gitlens",
 		"ldez.ignore-files",
 		"oderwat.indent-rainbow",
 		"jtladeiras.vscode-inline-sql",
 		"equinusocio.vsc-material-theme-icons",
-		"eg2.vscode-npm-script",
-		"christian-kohler.npm-intellisense",
 		"christian-kohler.path-intellisense",
-		"esbenp.prettier-vscode",
 		"tabnine.tabnine-vscode",
 		"redhat.vscode-yaml",
 		"akamud.vscode-theme-onedark",
@@ -103,7 +82,7 @@
 	"forwardPorts": [8080, 8081, 5432, 2333, 8284, 8285, 8287],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "yarn install"
+	"postCreateCommand": "dotnet restore"
 
 	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
 	// "remoteUser": "node"
