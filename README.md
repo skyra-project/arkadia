@@ -16,7 +16,7 @@
 
 ## Description
 
-FILL THIS IN TYLER
+Arkadia is the aptly named arcade of microservices that are being used for [Skyra] to instrument certain needs - such as notification streams, critical services (like moderation) and other features (such as social services or CDN's) with zero downtime and maximum reliability. Built atop the [dotnet] stack, using the latest features and runtime, and cross communicating with the main bot process via [gRPC], they are critical and useful components of Skyra's infrastructure.
 
 ---
 
@@ -47,3 +47,5 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 [paypalimage]: https://cdn.skyra.pw/gh-assets/paypal.png
 [skyra]: https://github.com/skyra-project/skyra
 [support server]: https://join.skyra.pw
+[dotnet]: https://dotnet.microsoft.com
+[grpc]: https://grpc.io
