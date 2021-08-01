@@ -9,7 +9,7 @@ using Database;
 
 namespace Database.Migrations
 {
-    [DbContext(typeof(SkyraDbContext))]
+    [DbContext(typeof(ArkadiaDbContext))]
     [Migration("20210502160754_V04_JoinAndLeaveMessageAutoDelete")]
     partial class V04_JoinAndLeaveMessageAutoDelete
     {

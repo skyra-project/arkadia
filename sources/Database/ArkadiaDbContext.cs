@@ -7,15 +7,15 @@ using Database.Models.Entities;
 namespace Database
 {
 	/// <inheritdoc />
-	public class SkyraDbContext : DbContext
+	public class ArkadiaDbContext : DbContext
 	{
 		/// <inheritdoc />
-		public SkyraDbContext()
+		public ArkadiaDbContext()
 		{
 		}
 
 		/// <inheritdoc />
-		public SkyraDbContext(DbContextOptions<SkyraDbContext> options)
+		public ArkadiaDbContext(DbContextOptions<ArkadiaDbContext> options)
 			: base(options)
 		{
 		}

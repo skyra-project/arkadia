@@ -9,7 +9,7 @@ using Database;
 
 namespace Database.Migrations
 {
-    [DbContext(typeof(SkyraDbContext))]
+    [DbContext(typeof(ArkadiaDbContext))]
     [Migration("20210503141534_V05_AfkSettings")]
     partial class V05_AfkSettings
     {

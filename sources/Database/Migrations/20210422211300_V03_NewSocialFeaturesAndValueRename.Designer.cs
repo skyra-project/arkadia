@@ -9,7 +9,7 @@ using Database;
 
 namespace Database.Migrations
 {
-    [DbContext(typeof(SkyraDbContext))]
+    [DbContext(typeof(ArkadiaDbContext))]
     [Migration("20210422211300_V03_NewSocialFeaturesAndValueRename")]
     partial class V03_NewSocialFeaturesAndValueRename
     {

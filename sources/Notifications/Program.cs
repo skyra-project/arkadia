@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Notifications.Managers;
 using Shared;
 
 namespace Notifications
@@ -14,6 +15,7 @@ namespace Notifications
 		{
 			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 			AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2Support", true);
+			
 			var host = CreateHostBuilder(args).Build();
 			var manager = host.Services.GetService<SubscriptionManager>()!;
 			await manager.StartAsync();

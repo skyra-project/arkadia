@@ -10,5 +10,8 @@ namespace Notifications.Models
 		public DateTime PublishedAt { get; set; }
 		public string Title { get; set; } = null!;
 		public string ChannelId { get; set; } = null!;
+		
+		public UploadType Type { get; set; }
 	}
+
 }

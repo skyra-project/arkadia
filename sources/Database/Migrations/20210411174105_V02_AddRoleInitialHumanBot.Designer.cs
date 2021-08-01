@@ -9,7 +9,7 @@ using Database;
 
 namespace Database.Migrations
 {
-    [DbContext(typeof(SkyraDbContext))]
+    [DbContext(typeof(ArkadiaDbContext))]
     [Migration("20210411174105_V02_AddRoleInitialHumanBot")]
     partial class V02_AddRoleInitialHumanBot
     {

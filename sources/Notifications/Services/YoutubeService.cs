@@ -1,90 +1,35 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Notifications.Models;
 using Database;
-using Action = Shared.Action;
-using Status = Shared.Status;
+using Notifications.Errors;
+using Notifications.Extensions;
+using Notifications.Managers;
+using Services;
+using Shared.Extensions;
 using YoutubeServiceBase = Services.YoutubeSubscription.YoutubeSubscriptionBase;
 
 namespace Notifications.Services
 {
 	public class YoutubeService : YoutubeServiceBase
 	{
-		private readonly IDatabase _database;
 		private readonly ConcurrentQueue<Notification> _notificationQueue;
-		private readonly SubscriptionManager _subscriptionManager;
 		private readonly ILogger<YoutubeService> _logger;
+		private readonly SubscriptionManager _subscriptionManager;
 
-		public YoutubeService(IDatabase database, SubscriptionManager subscriptionManager, ConcurrentQueue<Notification> notificationQueue, ILogger<YoutubeService> logger)
+		public YoutubeService(ConcurrentQueue<Notification> notificationQueue, ILogger<YoutubeService> logger, SubscriptionManager subscriptionManager)
 		{
-			_database = database;
-			_subscriptionManager = subscriptionManager;
 			_notificationQueue = notificationQueue;
 			_logger = logger;
+			_subscriptionManager = subscriptionManager;
 		}
 
-		public override async Task<SubscriptionListResult> GetSubscriptions(GetSubscriptionsQuery request, ServerCallContext _)
-		{
-			var subscriptions = await _database.GetSubscriptionsAsync(request.GuildId);
-
-			var response = new SubscriptionListResult();
-
-			if (subscriptions.Success)
-			{
-				foreach (var sub in subscriptions.Value!)
-				{
-					var subscription = new Subscription
-					{
-						YoutubeChannelId = sub.Id,
-						YoutubeChannelTitle = sub.ChannelTitle
-					};
-					response.Subscriptions.Add(subscription);
-				}
-				response.Status = Status.Success;
-			}
-			else
-			{
-				response.Status = Status.Failed;
-			}
-
-			return response;
-		}
-
-		public override Task<Result> ManageSubscription(SubscriptionManageQuery request, ServerCallContext _)
-		{
-			return request.Type switch
-			{
-				Action.Subscribe => HandleSubscription(request.YoutubeChannelUrl, request.GuildId, request.NotificationMessage, request.GuildChannelId),
-				Action.Unsubscribe => HandleUnsubscription(request.YoutubeChannelUrl, request.GuildId),
-				_ => throw new ArgumentOutOfRangeException()
-			};
-		}
-
-		public override async Task<Result> UpdateSubscriptionSettings(NotificationSettingsUpdateQuery request, ServerCallContext context)
-		{
-			var updated = await _database.UpdateYoutubeSubscriptionSettingsAsync(request.GuildId, request.Message, request.DiscordChannelId);
-			return new Result
-			{
-				Status = updated.Success ? Status.Success : Status.Failed
-			};
-		}
-
-		public override async Task<Result> UnsubscribeFromAll(UnsubscribeFromAllQuery request, ServerCallContext context)
-		{
-			var result = await _subscriptionManager.UnsubscribeAllAsync(request.GuildId);
-
-			return new Result
-			{
-				Status = result.Success ? Status.Success : Status.Failed
-			};
-		}
-
-		public override async Task SubscriptionNotifications(Empty request, IServerStreamWriter<SubscriptionNotificationResult> responseStream, ServerCallContext context)
+		public override async Task NotificationStream(Empty request, IServerStreamWriter<UploadNotification> responseStream, ServerCallContext context)
 		{
 			while (true)
 			{
@@ -95,90 +40,138 @@ namespace Notifications.Services
 
 				_logger.LogInformation("Sending notification {@Notification}", notification);
 
-				await using var database = new SkyraDatabase(new SkyraDbContext(), new NullLogger<SkyraDatabase>());
+				await using var database = new ArkadiaDbContext();
 
-				var notificationSubscription = await database.GetSubscriptionAsync(notification.ChannelId);
+				var subscription = await database.YoutubeSubscriptions.FindAsync(notification.ChannelId);
 
-				if (!notificationSubscription.Success)
+				if (subscription is null)
 				{
-					_logger.LogError("Did not get success status from retrieving database subscriptions");
+					_logger.LogError("Subscription with ID {Id} not found in the database while trying to dispatch notification for video {VideoId}", notification.ChannelId, notification.VideoId);
 					continue;
 				}
 
-				var channels = new NotificationChannel[notificationSubscription.Value!.GuildIds.Length];
+				var guildInformation = new GuildInformation[subscription.GuildIds.Length];
 
-				for (var index = 0; index < notificationSubscription.Value.GuildIds.Length; index++)
+				for (var index = 0; index < subscription.GuildIds.Length; index++)
 				{
-					var guildId = notificationSubscription.Value.GuildIds[index];
-					var guild = await database.GetGuildAsync(guildId);
-					channels[index] = new NotificationChannel
+					var guildId = subscription.GuildIds[index];
+					var guild = await database.Guilds.FindAsync(guildId);
+
+					if (guild is null)
+					{
+						_logger.LogError("Guild with ID {Id} was not found in the database while trying to dispatch notification for video {VideoId}", guildId, notification.VideoId);
+						continue;
+					}
+
+					var isLive = notification.Type == UploadType.Live;
+					
+					var discordChannelId = isLive
+						? guild.YoutubeUploadLiveChannel!
+						: guild.YoutubeUploadNotificationChannel!;
+
+					var discordMessageContent = isLive
+						? guild.YoutubeUploadLiveMessage!
+						: guild.YoutubeUploadNotificationMessage!;
+					
+					guildInformation[index] = new GuildInformation
 					{
 						GuildId = guildId,
-						DiscordChannelId = guild.Value!.YoutubeNotificationChannel,
-						Content = guild.Value.YoutubeNotificationMessage
+						ChannelId = discordChannelId,
+						Message = discordMessageContent
 					};
 				}
 
-				var subscriptionNotification = new SubscriptionNotificationResult
+				var videoUrlBuilder = new UriBuilder("https://www.youtube.com");
+				videoUrlBuilder.AddQueryParameter("watch", notification.VideoId);
+				var videoUrl = videoUrlBuilder.Uri.ToString();
+
+				var uploadNotification = new UploadNotification
 				{
-					VideoId = notification.VideoId,
-					VideoTitle = notification.Title,
-					PublishedAt = notification.PublishedAt.ToUniversalTime().ToTimestamp(),
-					YoutubeChannelName = notification.ChannelName,
-					ThumbnailUrl = notification.ThumbnailUrl
+					Video = new Video
+					{
+						Title = notification.Title,
+						Url = videoUrl,
+						Time = notification.PublishedAt.ToTimestamp(),
+						ChannelInfo = new ChannelInformation
+						{
+							ChannelName = notification.ChannelName,
+							ChannelUrl = GetChannelUrl(notification.ChannelId)
+						}
+					}
 				};
 
-				subscriptionNotification.Channels.AddRange(channels);
+				uploadNotification.GuildInfo.AddRange(guildInformation);
 
-				await responseStream.WriteAsync(subscriptionNotification);
+				await responseStream.WriteAsync(uploadNotification);
 
-				var guildsToString = string.Join(',', notificationSubscription.Value.GuildIds);
+				var guildsToString = string.Join(',', subscription.GuildIds);
 				_logger.LogInformation("Send notification for {VideoTitle} ({VideoId}) to guilds [{GuildIds}]", notification.Title, notification.VideoId, guildsToString);
 			}
 		}
 
-		private async Task<Result> HandleSubscription(string channelUrl, string guildId, string message, string guildChannelId)
+		public override async Task<YoutubeServiceResponse> Subscribe(SubscriptionRequest request, ServerCallContext context)
 		{
-			var isAlreadySubscribed = await _subscriptionManager.IsSubscribedAsync(guildId, channelUrl);
+			var managerResponse = await _subscriptionManager.SubscribeAsync(request.ChannelUrl, request.GuildId);
 
-			if (!isAlreadySubscribed.Success)
-			{
-				return new Result
-				{
-					Status = Status.Failed
-				};
-			}
+			return managerResponse.AsYoutubeServiceResponse();
+		}
+		
+		public override async Task<YoutubeServiceResponse> Unsubscribe(SubscriptionRequest request, ServerCallContext context)
+		{
+			var managerResponse = await _subscriptionManager.UnsubscribeAsync(request.ChannelUrl, request.GuildId);
 
-			if (isAlreadySubscribed.Value)
-			{
-				return new Result
-				{
-					Status = Status.AlreadySet
-				};
-			}
-
-			var result = await _subscriptionManager.SubscribeAsync(channelUrl, guildId, message, guildChannelId);
-
-			var resultMessage = result.Success ? "succeeded" : "failed";
-			_logger.LogInformation("Subscription to channel {ChannelUrl} from guild {GuildId} {Result}", channelUrl, guildId, resultMessage);
-
-			return new Result
-			{
-				Status = result.Success ? Status.Success : Status.Failed
-			};
+			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		private async Task<Result> HandleUnsubscription(string channelUrl, string guildId)
+		public override async Task<YoutubeServiceResponse> SetDiscordUploadChannel(DiscordChannelRequest request, ServerCallContext context)
 		{
-			var result = await _subscriptionManager.UnsubscribeAsync(channelUrl, guildId);
+			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, uploadChannel: request.ChannelId);
+			return managerResponse.AsYoutubeServiceResponse();
+		}
 
-			var resultMessage = result.Success ? "succeeded" : "failed";
-			_logger.LogInformation("Unsubscription to channel {ChannelUrl} from guild {GuildId} {Result}", channelUrl, guildId, resultMessage);
+		public override async Task<YoutubeServiceResponse> SetDiscordUploadMessage(DiscordMessageRequest request, ServerCallContext context)
+		{
+			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, uploadMessage: request.Content);
+			return managerResponse.AsYoutubeServiceResponse();
+		}
 
-			return new Result
+		public override async Task<YoutubeServiceResponse> SetDiscordLiveChannel(DiscordChannelRequest request, ServerCallContext context)
+		{
+			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, liveChannel: request.ChannelId);
+			return managerResponse.AsYoutubeServiceResponse();
+		}
+
+		public override async Task<YoutubeServiceResponse> SetDiscordLiveMessage(DiscordMessageRequest request, ServerCallContext context)
+		{
+			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, liveMessage: request.Content);
+			return managerResponse.AsYoutubeServiceResponse();
+		}
+
+		public override async Task<YoutubeServiceResponse> RemoveAllSubscriptions(RemoveAllRequest request, ServerCallContext context)
+		{
+			var managerResponse = await _subscriptionManager.UnsubscribeFromAllAsync(request.GuildId);
+			return managerResponse.AsYoutubeServiceResponse();
+		}
+
+		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext context)
+		{ 
+			var subscriptions = await _subscriptionManager.GetAllSubscriptionsAsync(request.GuildId);
+
+			var response = new SubscriptionListResponse();
+
+			var channelInformation = subscriptions.Select(subcription => new ChannelInformation
 			{
-				Status = result.Success ? Status.Success : Status.Failed
-			};
+				ChannelName = subcription.ChannelTitle,
+				ChannelUrl = GetChannelUrl(subcription.Id)
+			});
+			
+			response.Info.AddRange(channelInformation);
+			return response;
+		}
+		
+		private static string GetChannelUrl(string youtubeChannelId)
+		{
+			return $"https://www.youtube.com/channel/{youtubeChannelId}";
 		}
 	}
 }

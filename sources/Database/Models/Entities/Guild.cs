@@ -743,12 +743,18 @@ namespace Database.Models.Entities
 		[Column("notifications.streams.twitch.streamers", TypeName = "jsonb")]
 		public string NotificationsStreamsTwitchStreamers { get; set; } = null!;
 
-		[Column("notifications.youtube.channel", TypeName = "character varying(19)")]
-		public string? YoutubeNotificationChannel { get; set; }
+		[Column("notifications.youtube.upload.channel", TypeName = "character varying(19)")]
+		public string? YoutubeUploadNotificationChannel { get; set; }
 
-		[Column("notifications.youtube.message")]
-		public string? YoutubeNotificationMessage { get; set; }
+		[Column("notifications.youtube.upload.message")]
+		public string? YoutubeUploadNotificationMessage { get; set; }
 
+		[Column("notifications.youtube.live.channel", TypeName = "character varying(19)")]
+		public string? YoutubeUploadLiveChannel { get; set; }
+
+		[Column("notifications.youtube.live.message")]
+		public string? YoutubeUploadLiveMessage { get; set; }
+		
 		[Required]
 		[Column("suggestions.emojis.upvote")]
 		[StringLength(128)]

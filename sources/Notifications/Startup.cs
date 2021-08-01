@@ -9,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using Notifications.Models;
 using Notifications.Services;
 using Database;
+using Notifications.Clients;
+using Notifications.Managers;
 
 namespace Notifications
 {
@@ -19,12 +21,12 @@ namespace Notifications
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddSingleton(new ConcurrentQueue<Notification>());
-			services.AddSingleton<IDatabase, SkyraDatabase>();
+			services.AddSingleton<YoutubeApiClient>();
 			services.AddSingleton<PubSubClient>();
 			services.AddSingleton<SubscriptionManager>();
 			services.AddSingleton<RequestCache>();
 			services.AddSingleton<HttpClient>();
-			services.AddSingleton<SkyraDbContext>();
+			services.AddSingleton<ArkadiaDbContext>();
 			services.AddSingleton(BrowsingContext.New(Configuration.Default.WithDefaultLoader()));
 
 			services.AddGrpc();
