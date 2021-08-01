@@ -73,7 +73,7 @@ namespace Notifications.Managers
 			}
 		}
 
-		public async Task StartAsync()
+		public Task StartAsync()
 		{
 			using var database = new ArkadiaDbContext();
 			var currentSubscriptions = database.YoutubeSubscriptions;
@@ -81,6 +81,7 @@ namespace Notifications.Managers
 
 			_resubscribeTimes = currentSubscriptions.ToDictionary(sub => sub.Id, sub => sub.ExpiresAt);
 			_resubTimer.Start();
+			return Task.CompletedTask;
 		}
 
 		public async Task<Result> UpdateSubscriptionSettingsAsync(string guildId, string? uploadChannel = null, string? uploadMessage = null, string? liveChannel = null, string? liveMessage = null)
