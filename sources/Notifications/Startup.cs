@@ -2,15 +2,15 @@
 using System.Collections.Concurrent;
 using System.Net.Http;
 using AngleSharp;
+using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Notifications.Models;
-using Notifications.Services;
-using Database;
 using Notifications.Clients;
 using Notifications.Managers;
+using Notifications.Models;
+using Notifications.Services;
 
 namespace Notifications
 {

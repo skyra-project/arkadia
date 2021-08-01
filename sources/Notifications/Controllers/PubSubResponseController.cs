@@ -7,12 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml.Linq;
+using Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Notifications.Models;
-using Database;
-using Microsoft.Extensions.Primitives;
 using Notifications.Managers;
+using Notifications.Models;
 
 namespace Notifications.Controllers
 {
@@ -20,14 +19,15 @@ namespace Notifications.Controllers
 	[Route("notifications")]
 	public class PubSubResponseController : ControllerBase
 	{
+		private readonly YoutubeApiClient _apiClient;
 		private readonly RequestCache _cache;
 		private readonly ILogger<PubSubResponseController> _logger;
 		private readonly ConcurrentQueue<Notification> _notificationQueue;
 		private readonly DateTime _startupTime = DateTime.Now;
 		private readonly SubscriptionManager _subscriptionManager;
-		private readonly YoutubeApiClient _apiClient;
-		
-		public PubSubResponseController(ILogger<PubSubResponseController> logger, RequestCache cache, ConcurrentQueue<Notification> notificationQueue, SubscriptionManager subscriptionManager, YoutubeApiClient apiClient)
+
+		public PubSubResponseController(ILogger<PubSubResponseController> logger, RequestCache cache, ConcurrentQueue<Notification> notificationQueue,
+			SubscriptionManager subscriptionManager, YoutubeApiClient apiClient)
 		{
 			_logger = logger;
 			_cache = cache;
@@ -74,18 +74,18 @@ namespace Notifications.Controllers
 			var elements = await GetElementsAsync();
 
 			var entryElement = elements.FirstOrDefault(element => element.Name.LocalName == "entry");
-			
+
 			if (entryElement is null) // it's a delete, they have no 'entry' element, ignore
 			{
 				var atby = elements
 					.First(element => element.Name.LocalName == "deleted-entry")
 					.Elements()
-						.First(element => element.Name.LocalName == "by");
-				
+					.First(element => element.Name.LocalName == "by");
+
 				var url = atby
 					.Elements()
 					.First(element => element.Name.LocalName == "uri").Value;
-				
+
 				_logger.LogInformation("Ignoring deleted video from channel: {Id}", url);
 				return Ok();
 			}
@@ -104,7 +104,7 @@ namespace Notifications.Controllers
 			}
 
 			var publishedTime = published.Value;
-			
+
 			// if it was published more then 10 minutes ago, we ignore it, as youtube likes to send videos from hours ago
 			if (publishedTime.AddMinutes(10) <= _startupTime)
 			{
@@ -136,14 +136,14 @@ namespace Notifications.Controllers
 			await _subscriptionManager.AddSeenVideoAsync(channelId, videoId);
 
 			var channelName = GetChannelName(entryElement);
-			
+
 			if (channelName is null)
 			{
 				_logger.LogWarning("Channel name element was null: {Entry}", entryElement.ToString());
 				return Ok();
 			}
-			
-			
+
+
 			await _subscriptionManager.UpdateChannelNameAsync(channelName, channelId);
 
 			var thumbnailUrl = $"https://img.youtube.com/vi/{videoId}/maxresdefault.jpg";
@@ -154,9 +154,9 @@ namespace Notifications.Controllers
 			{
 				_logger.LogError("Youtube API Client did not succeed in querying videos: {IsLiveError}", isLive.Error.Message);
 			}
-			
+
 			_logger.LogTrace("Enqueuing video with ID {Id}", videoId);
-			
+
 			_notificationQueue.Enqueue(new Notification
 			{
 				ChannelId = channelId,

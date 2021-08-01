@@ -754,7 +754,7 @@ namespace Database.Models.Entities
 
 		[Column("notifications.youtube.live.message")]
 		public string? YoutubeUploadLiveMessage { get; set; }
-		
+
 		[Required]
 		[Column("suggestions.emojis.upvote")]
 		[StringLength(128)]

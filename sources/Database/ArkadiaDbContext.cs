@@ -1,6 +1,6 @@
 using System;
-using Microsoft.EntityFrameworkCore;
 using Database.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 
 #nullable disable
 
@@ -19,7 +19,7 @@ namespace Database
 			: base(options)
 		{
 		}
-		
+
 		public virtual DbSet<Guild> Guilds { get; set; }
 		public virtual DbSet<YoutubeSubscription> YoutubeSubscriptions { get; set; }
 

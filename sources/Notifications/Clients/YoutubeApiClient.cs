@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Database.Models.Entities;
-using Google.Protobuf.WellKnownTypes;
 using Remora.Results;
 using Shared;
 using Shared.Extensions;
@@ -13,8 +11,8 @@ namespace Notifications
 {
 	public class YoutubeApiClient
 	{
-		private readonly string _youtubeApiKey;
 		private const string ApiUrl = "https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=CBR77HKlO00&key=[YOUR_API_KEY]";
+		private readonly string _youtubeApiKey;
 
 		public YoutubeApiClient()
 		{
@@ -43,9 +41,10 @@ namespace Notifications
 				{
 					return Result<bool>.FromError(new YoutubeApiError("Body was not as expected."));
 				}
-				
+
 				return Result<bool>.FromSuccess(response.IsLive);
 			}
+
 			return Result<bool>.FromError(new YoutubeApiError(result.ReasonPhrase ?? ""));
 		}
 
@@ -53,19 +52,19 @@ namespace Notifications
 		{
 			public List<Item> Items { get; set; } = null!;
 
+			public bool IsLive => Items[0].Snippet.LiveBroadcastContent == "live";
+
 			public class Item
 			{
-				public Snippet Snippet { get; set; } = null!;
-			}
-			
-			public class Snippet
-			{
-				public string LiveBroadcastContent { get; set; }= null!;
+				public Snippet Snippet { get; } = null!;
 			}
 
-			public bool IsLive => Items[0].Snippet.LiveBroadcastContent == "live";
+			public class Snippet
+			{
+				public string LiveBroadcastContent { get; } = null!;
+			}
 		}
-		
+
 		private class YoutubeApiError : IResultError
 		{
 			public YoutubeApiError(string message)

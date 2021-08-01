@@ -13,13 +13,13 @@ namespace UnitTests.Shared.Extensions
 		public void UriBuilder_ShouldAppendQuestionMark_WhenFirstQueryIsAppended(string queryName, object queryValue)
 		{
 			// arrange
-			
+
 			var baseUrl = "https://www.foobar.com";
 
 			var builder = new UriBuilder(baseUrl);
 
 			var expected = $"https://www.foobar.com/?{queryName}={queryValue}";
-			
+
 			// act
 
 			builder.AddQueryParameter(queryName, queryValue);
@@ -29,12 +29,12 @@ namespace UnitTests.Shared.Extensions
 
 			Assert.AreEqual(expected, fullUrl);
 		}
-		
+
 		[Test]
 		public void UriBuilder_ShouldAppendAmpersand_WhenSecondQueryIsAdded()
 		{
 			// arrange
-			
+
 			var baseUrl = "https://www.foobar.com";
 
 			var builder = new UriBuilder(baseUrl);
@@ -46,7 +46,7 @@ namespace UnitTests.Shared.Extensions
 			var firstQueryValue = 1;
 			var secondQueryValue = "ding";
 			var thirdQueryValue = 3.142;
-			
+
 			var expected = $"https://www.foobar.com/?{firstQueryName}={firstQueryValue}&{secondQueryName}={secondQueryValue}&{thirdQueryName}={thirdQueryValue}";
 
 			// act

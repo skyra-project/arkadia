@@ -2,14 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
+using Database;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using Notifications.Models;
-using Database;
-using Notifications.Errors;
 using Notifications.Extensions;
 using Notifications.Managers;
+using Notifications.Models;
 using Services;
 using Shared.Extensions;
 using YoutubeServiceBase = Services.YoutubeSubscription.YoutubeSubscriptionBase;
@@ -18,8 +17,8 @@ namespace Notifications.Services
 {
 	public class YoutubeService : YoutubeServiceBase
 	{
-		private readonly ConcurrentQueue<Notification> _notificationQueue;
 		private readonly ILogger<YoutubeService> _logger;
+		private readonly ConcurrentQueue<Notification> _notificationQueue;
 		private readonly SubscriptionManager _subscriptionManager;
 
 		public YoutubeService(ConcurrentQueue<Notification> notificationQueue, ILogger<YoutubeService> logger, SubscriptionManager subscriptionManager)
@@ -46,7 +45,8 @@ namespace Notifications.Services
 
 				if (subscription is null)
 				{
-					_logger.LogError("Subscription with ID {Id} not found in the database while trying to dispatch notification for video {VideoId}", notification.ChannelId, notification.VideoId);
+					_logger.LogError("Subscription with ID {Id} not found in the database while trying to dispatch notification for video {VideoId}", notification.ChannelId,
+						notification.VideoId);
 					continue;
 				}
 
@@ -64,7 +64,7 @@ namespace Notifications.Services
 					}
 
 					var isLive = notification.Type == UploadType.Live;
-					
+
 					var discordChannelId = isLive
 						? guild.YoutubeUploadLiveChannel!
 						: guild.YoutubeUploadNotificationChannel!;
@@ -72,7 +72,7 @@ namespace Notifications.Services
 					var discordMessageContent = isLive
 						? guild.YoutubeUploadLiveMessage!
 						: guild.YoutubeUploadNotificationMessage!;
-					
+
 					guildInformation[index] = new GuildInformation
 					{
 						GuildId = guildId,
@@ -115,7 +115,7 @@ namespace Notifications.Services
 
 			return managerResponse.AsYoutubeServiceResponse();
 		}
-		
+
 		public override async Task<YoutubeServiceResponse> Unsubscribe(SubscriptionRequest request, ServerCallContext context)
 		{
 			var managerResponse = await _subscriptionManager.UnsubscribeAsync(request.ChannelUrl, request.GuildId);
@@ -125,7 +125,7 @@ namespace Notifications.Services
 
 		public override async Task<YoutubeServiceResponse> SetDiscordUploadChannel(DiscordChannelRequest request, ServerCallContext context)
 		{
-			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, uploadChannel: request.ChannelId);
+			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, request.ChannelId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
@@ -154,7 +154,7 @@ namespace Notifications.Services
 		}
 
 		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext context)
-		{ 
+		{
 			var subscriptions = await _subscriptionManager.GetAllSubscriptionsAsync(request.GuildId);
 
 			var response = new SubscriptionListResponse();
@@ -164,11 +164,11 @@ namespace Notifications.Services
 				ChannelName = subcription.ChannelTitle,
 				ChannelUrl = GetChannelUrl(subcription.Id)
 			});
-			
+
 			response.Info.AddRange(channelInformation);
 			return response;
 		}
-		
+
 		private static string GetChannelUrl(string youtubeChannelId)
 		{
 			return $"https://www.youtube.com/channel/{youtubeChannelId}";

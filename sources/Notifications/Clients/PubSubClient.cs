@@ -10,9 +10,9 @@ namespace Notifications.Clients
 	public class PubSubClient
 	{
 		private readonly RequestCache _cache;
+		private readonly string _callbackUrl;
 		private readonly HttpClient _httpClient;
 		private readonly ILogger<PubSubClient> _logger;
-		private readonly string _callbackUrl;
 		private readonly string _pubSubUrl;
 
 		public PubSubClient(RequestCache cache, HttpClient httpClient, ILogger<PubSubClient> logger)
@@ -47,9 +47,9 @@ namespace Notifications.Clients
 			}
 
 			_logger.LogError("Subscription request to pubsubhubbub failed: {Error}", await status.Content.ReadAsStringAsync());
-			
+
 			_cache.RemoveRequest(channelId);
-			
+
 			return Result.FromError(new PubSubHubBubError());
 		}
 
@@ -63,7 +63,7 @@ namespace Notifications.Clients
 			var options = new FormUrlEncodedContent(collection);
 			return options;
 		}
-		
+
 		public class PubSubHubBubError : IResultError
 		{
 			public string Message => "";

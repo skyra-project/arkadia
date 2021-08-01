@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
-using NUnit.Framework;
 using Database.Extensions;
+using NUnit.Framework;
 using UnitTests.Database.Stubs;
+
 namespace UnitTests.Database.Extensions
 {
 	[TestFixture]

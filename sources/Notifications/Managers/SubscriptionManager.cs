@@ -46,7 +46,7 @@ namespace Notifications.Managers
 				{
 					_logger.LogInformation("Resubscribing to channel {ChannelId}", channelId);
 					var result = await _pubSubClient.SubscribeAsync(channelId);
-					
+
 					if (!result.IsSuccess)
 					{
 						_logger.LogInformation("No longer attempting to resubscribe to channel: {Channel}", channelId);
@@ -56,7 +56,7 @@ namespace Notifications.Managers
 
 					var resubTime = DateTime.Now.AddDays(5);
 					_resubscribeTimes[channelId] = resubTime;
-					
+
 					using var database = new ArkadiaDbContext();
 
 					var subscription = await database.YoutubeSubscriptions.FindAsync(channelId);
@@ -77,22 +77,22 @@ namespace Notifications.Managers
 		{
 			using var database = new ArkadiaDbContext();
 			var currentSubscriptions = database.YoutubeSubscriptions;
-			
+
 
 			_resubscribeTimes = currentSubscriptions.ToDictionary(sub => sub.Id, sub => sub.ExpiresAt);
 			_resubTimer.Start();
 			return Task.CompletedTask;
 		}
 
-		public async Task<Result> UpdateSubscriptionSettingsAsync(string guildId, string? uploadChannel = null, string? uploadMessage = null, string? liveChannel = null, string? liveMessage = null)
+		public async Task<Result> UpdateSubscriptionSettingsAsync(string guildId, string? uploadChannel = null, string? uploadMessage = null, string? liveChannel = null,
+			string? liveMessage = null)
 		{
-
 			if (uploadChannel is null && uploadMessage is null && liveChannel is null && liveMessage is null)
 			{
 				_logger.LogError("UpdateSubscriptionSettingsAsync() called with all null parameters");
 				return Result.FromError(new AllParametersNullError());
 			}
-			
+
 			using var database = new ArkadiaDbContext();
 			var guild = await database.Guilds.FindAsync(guildId);
 
@@ -111,7 +111,7 @@ namespace Notifications.Managers
 			guild.YoutubeUploadLiveMessage = liveMessage ?? guild.YoutubeUploadLiveMessage;
 
 			await database.SaveChangesAsync();
-			
+
 			return Result.FromSuccess();
 		}
 
@@ -135,13 +135,12 @@ namespace Notifications.Managers
 			}
 
 			var isSubscribed = subscription.GuildIds.Contains(guildId);
-			
+
 			return Result<bool>.FromSuccess(isSubscribed);
 		}
 
 		public async Task<Result> SubscribeAsync(string youtubeChannelUrl, string guildId)
 		{
-
 			var isAlreadySubscribed = await IsSubscribedAsync(guildId, youtubeChannelUrl);
 
 			if (!isAlreadySubscribed.IsSuccess)
@@ -153,7 +152,7 @@ namespace Notifications.Managers
 			{
 				return Result.FromSuccess();
 			}
-			
+
 			using var database = new ArkadiaDbContext();
 
 			var guild = await database.Guilds.FindAsync(guildId);
@@ -164,7 +163,7 @@ namespace Notifications.Managers
 			{
 				return Result.FromError(new UnconfiguredError());
 			}
-			
+
 			var (youtubeChannelId, youtubeChannelTitle) = await GetChannelInfoAsync(youtubeChannelUrl);
 
 			if (youtubeChannelId is null || youtubeChannelTitle is null)
@@ -177,12 +176,12 @@ namespace Notifications.Managers
 			if (subscription is not null)
 			{
 				// we already have an active subscription, just need to add this guild to the sub
-				
+
 				var currentlySubscribedGuilds = subscription.GuildIds;
 				var newSubscribedGuilds = new string[currentlySubscribedGuilds.Length + 1];
 				currentlySubscribedGuilds.CopyTo(newSubscribedGuilds, 0);
 				newSubscribedGuilds[currentlySubscribedGuilds.Length] = guildId;
-				
+
 				_logger.LogInformation("Added a subscription to {YoutubeChannelId} for {GuildId}", youtubeChannelId, guildId);
 			}
 			else
@@ -210,7 +209,7 @@ namespace Notifications.Managers
 			}
 
 			await database.SaveChangesAsync();
-			
+
 			return Result.FromSuccess();
 		}
 
@@ -277,7 +276,7 @@ namespace Notifications.Managers
 			{
 				await UnsubscribeAsync(guildId, subscription.Id);
 			}
-			
+
 			return Result.FromSuccess();
 		}
 
