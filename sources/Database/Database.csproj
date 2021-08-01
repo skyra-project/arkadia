@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-        <RootNamespace>Skyra.Database</RootNamespace>
+        <RootNamespace>Database</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
