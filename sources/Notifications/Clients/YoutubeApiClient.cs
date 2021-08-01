@@ -11,7 +11,7 @@ namespace Notifications
 {
 	public class YoutubeApiClient
 	{
-		private const string ApiUrl = "https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=CBR77HKlO00&key=[YOUR_API_KEY]";
+		private const string ApiUrl = "https://youtube.googleapis.com/youtube/v3/videos";
 		private readonly string _youtubeApiKey;
 
 		public YoutubeApiClient()
