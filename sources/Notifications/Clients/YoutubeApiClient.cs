@@ -38,6 +38,12 @@ namespace Notifications
 			{
 				var body = await result.Content.ReadAsStreamAsync();
 				var response = await JsonSerializer.DeserializeAsync<YoutubeApiResponse>(body);
+
+				if (response is null)
+				{
+					return Result<bool>.FromError(new YoutubeApiError("Body was not as expected."));
+				}
+				
 				return Result<bool>.FromSuccess(response.IsLive);
 			}
 			return Result<bool>.FromError(new YoutubeApiError(result.ReasonPhrase ?? ""));
@@ -45,16 +51,16 @@ namespace Notifications
 
 		private class YoutubeApiResponse
 		{
-			public List<Item> Items { get; set; }
+			public List<Item> Items { get; set; } = null!;
 
 			public class Item
 			{
-				public Snippet Snippet { get; set; }
+				public Snippet Snippet { get; set; } = null!;
 			}
 			
 			public class Snippet
 			{
-				public string LiveBroadcastContent { get; set; }
+				public string LiveBroadcastContent { get; set; }= null!;
 			}
 
 			public bool IsLive => Items[0].Snippet.LiveBroadcastContent == "live";

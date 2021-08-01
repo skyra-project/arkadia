@@ -171,7 +171,7 @@ namespace Notifications.Controllers
 			return Ok();
 		}
 
-		private static string? GetChannelName(XElement? entry)
+		private static string GetChannelName(XElement entry)
 		{
 			var channelName = entry.Elements().First(element => element.Name.LocalName == "author").Elements().First(element => element.Name.LocalName == "name").Value;
 			return channelName;
