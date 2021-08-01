@@ -5,8 +5,8 @@
       <DataCollector friendlyName="XPlat code coverage">
         <Configuration>
           <Format>cobertura</Format>          
-          <Exclude>[*]Skyra.UnitTests*,[*]Skyra.IntegrationTests*,[*]Skyra.Database.Models*</Exclude>
-          <ExcludeByFile>**/Program.cs,**/Startup.cs,**/.nuget/,**/obj/,**/build/,**/SkyraDbContext.cs</ExcludeByFile>
+          <Exclude>[*]UnitTests*,[*]Database.Models*,[*]Database.Migrations*</Exclude>
+          <ExcludeByFile>**/Program.cs,**/Startup.cs,**/.nuget/,**/obj/,**/build/,**/ArkadiaDbContext.cs,**/PubSubResponseController.cs,**/PubSubClient.cs,**/YoutubeApiClient.cs,**/SubscriptionManager.cs,**/YoutubeService.cs</ExcludeByFile>
           <IncludeTestAssembly>true</IncludeTestAssembly>
           <SkipAutoProps>true</SkipAutoProps>
         </Configuration>

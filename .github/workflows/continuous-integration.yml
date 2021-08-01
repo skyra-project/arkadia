@@ -10,18 +10,6 @@ jobs:
   DotNetCI:
     name: Dotnet Build & Test
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: ghcr.io/skyra-project/postgres:latest
-        env:
-          POSTGRES_DB: skyra-dotnet-test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
@@ -39,29 +27,12 @@ jobs:
       - name: Build C# code
         run: dotnet build
       - name: Run C# unit tests
-        run: dotnet test Skyra.UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
-      - name: Run C# integration tests
-        run: |
-          dotnet new tool-manifest
-          dotnet tool install dotnet-ef
-          dotnet tool run dotnet-ef database update --project Skyra.Database
-          dotnet run --project Skyra.Grpc &
-          while ! nc -z localhost 8291; do
-            sleep 0.1 # wait for 1/10 of the second before check again
-          done
-          dotnet test Skyra.IntegrationTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
-        env:
-          POSTGRES_DB: skyra-dotnet-test
+        run: dotnet test tests/UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
       - name: Store code coverage report (Unit Tests)
         uses: actions/upload-artifact@v2
         with:
           name: dotnet-coverage-unit
-          path: Skyra.UnitTests/TestResults/
-      - name: Store code coverage report (Integration Tests)
-        uses: actions/upload-artifact@v2
-        with:
-          name: dotnet-coverage-integration
-          path: Skyra.IntegrationTests/TestResults/
+          path: tests/UnitTests/TestResults/
 
   Upload_Coverage_Report:
     name: Upload coverage report to codecov
@@ -76,12 +47,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: dotnet-coverage-unit
-          path: Skyra.UnitTests/TestResults/
-      - name: Download DotNet IT Coverage report
-        uses: actions/download-artifact@v2
-        with:
-          name: dotnet-coverage-integration
-          path: Skyra.IntegrationTests/TestResults/
+          path: tests/UnitTests/TestResults/
       - name: Codecov Upload
         uses: codecov/codecov-action@v2.0.2
         with:
