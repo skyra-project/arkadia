@@ -33,4 +33,4 @@ jobs:
           push: true
           context: .
           file: Notifications.Dockerfile
-          tags: ghcr.io/skyra-project/Arkadia.Notifications:latest
+          tags: ghcr.io/skyra-project/arkadia.notifications:latest
