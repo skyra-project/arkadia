@@ -14,9 +14,88 @@
 
 ---
 
+**Table of Contents**
+
+-   [Arkadia](#arkadia)
+    -   [Description](#description)
+    -   [Published Docker Images](#published-docker-images)
+        -   [[arkadia-notifications]](#arkadia-notifications)
+            -   [Quick reference](#quick-reference)
+            -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links)
+            -   [What is [arkadia-notifications]](#what-is-arkadia-notifications)
+            -   [Environment Variables](#environment-variables)
+    -   [Buy us some doughnuts](#buy-us-some-doughnuts)
+
 ## Description
 
-Arkadia is the aptly named arcade of microservices that are being used for [Skyra] to instrument certain needs - such as notification streams, critical services (like moderation) and other features (such as social services or CDN's) with zero downtime and maximum reliability. Built atop the [dotnet] stack, using the latest features and runtime, and cross communicating with the main bot process via [gRPC], they are critical and useful components of Skyra's infrastructure.
+Arkadia is the aptly named arcade of micro services that are being used for [Skyra] to instrument certain needs - such as notification streams, critical services (like moderation) and other features (such as social services or CDN's) with zero downtime and maximum reliability. Built atop the [dotnet] stack, using the latest features and runtime, and cross communicating with the main bot process via [gRPC], they are critical and useful components of Skyra's infrastructure.
+
+## Published Docker Images
+
+### [arkadia-notifications]
+
+#### Quick reference
+
+-   **Maintained by**:  
+    [Skyra Project](https://github.com/skyra-project)
+
+-   **Where to get help**:  
+    [the Skyra Lounge server](https://join.skyra.pw)
+
+-   **Where to file issues**:  
+    [https://github.com/skyra-project/arkadia/issues](https://github.com/skyra-project/arkadia/issues)
+
+#### Supported tags and respective `Dockerfile` links
+
+-   [`latest`](https://github.com/skyra-project/arkadia/blob/main/Notifications.Dockerfile)
+
+#### What is [arkadia-notifications]
+
+Some description here
+
+#### Environment Variables
+
+**Required Environment Variables**
+
+-   `HTTP_PORT`  
+     The port for the http server to run on.  
+     _For Example:_ `9009`
+-   `GRPC_PORT`  
+     The port for the grpc server to run on.  
+     _For example:_ `9010`
+-   `CALLBACK_URL`  
+     The url passed to google's pubsubhubbub to send notifications to.  
+     _For Example:_ `https://notifications.skyra.pw`
+-   `YOUTUBE_API_KEY`  
+     The api key for googles data api.  
+     _For example:_ `4MRhPzudqh4n9UP68y9c6xsh_Nk3TeG6Kf_3*oFAn2jpF@nffN`
+
+**Optional Environment Variables**
+
+-   `RESUB_TIMER_INTERVAL`  
+    The amount of seconds we should wait between checking for resubscriptions  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `PUBSUB_URL`  
+    The url for the pubsubhubbub api  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `POSTGRES_USER`  
+    The user for the postgres database  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `POSTGRES_PASSWORD`  
+    The password for the database  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `POSTGRES_HOST`  
+    The host string  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `POSTGRES_PORT`  
+    The port to connect to postgres to  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `POSTGRES_DB`  
+    The database to use in postgres  
+    _default:_ `FILL ME IN PLS TYLER`
+-   `SENTRY_URL`  
+    The DSN url for sentry  
+    _default:_ `FILL ME IN PLS TYLER`
 
 ---
 
@@ -49,3 +128,4 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 [support server]: https://join.skyra.pw
 [dotnet]: https://dotnet.microsoft.com
 [grpc]: https://grpc.io
+[arkadia-notifications]: (https://github.com/skyra-project/docker-images/pkgs/container/arkadia-notifications)

@@ -12,8 +12,5 @@ out/
 TestResults/
 coverage.json
 
-# Ignore generated database migrations
-SkyraDbContextModelSnapshot.cs
-
 # Ignore gitignore
 .gitignore

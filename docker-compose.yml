@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  notifs:
+    image: ghcr.io/skyra-project/arkadia-notifications:latest
+    container_name: arkadia-notifications
+    restart: 'no'
+    build:
+      context: ./
+      dockerfile: Notifications.Dockerfile
+    tty: true
+    environment:
+      # Required
+      HTTP_PORT: '' # The port for the http server to run on. For Example: 9009
+      GRPC_PORT: '' # The port for the grpc server to run on. For example: 9010
+      CALLBACK_URL: '' # The url passed to google's pubsubhubbub to send notifications to. For Example: https://notifications.skyra.pw
+      YOUTUBE_API_KEY: '' # The api key for googles data api. For example: kajshdjksad
+      # Optional
+      RESUB_TIMER_INTERVAL: '' # The amount of seconds we should wait between checking for resubscriptions
+      PUBSUB_URL: '' # The url for the pubsubhubbub api
+      POSTGRES_USER: '' # The user for the postgres database
+      POSTGRES_PASSWORD: '' # The password for the database
+      POSTGRES_HOST: '' # The host string
+      POSTGRES_PORT: '' # The port to connect to postgres to
+      POSTGRES_DB: '' # The database to use in postgres
+      SENTRY_URL: '' # The DSN url for sentry
+    ports:
+      # Fill in with LocalVPSHttpPort:${HTTP_PORT}
+      - '9009:9009'
