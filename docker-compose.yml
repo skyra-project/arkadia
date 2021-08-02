@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   notifs:
-    image: ghcr.io/skyra-project/arkadia-notifications:latest
-    container_name: arkadia-notifications
+    image: ghcr.io/skyra-project/Arkadia.Notifications:latest
+    container_name: Arkadia.Notifications
     restart: 'no'
     build:
       context: ./

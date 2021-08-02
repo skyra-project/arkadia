@@ -19,10 +19,10 @@
 -   [Arkadia](#arkadia)
     -   [Description](#description)
     -   [Published Docker Images](#published-docker-images)
-        -   [arkadia-notifications](#arkadia-notifications)
+        -   [Arkadia.Notifications](#Arkadia.Notifications)
             -   [Quick reference](#quick-reference)
             -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links)
-            -   [What is arkadia-notifications](#what-is-arkadia-notifications)
+            -   [What is Arkadia.Notifications](#what-is-Arkadia.Notifications)
             -   [Environment Variables](#environment-variables)
     -   [Buy us some doughnuts](#buy-us-some-doughnuts)
 
@@ -32,7 +32,7 @@ Arkadia is the aptly named arcade of micro services that are being used for [Sky
 
 ## Published Docker Images
 
-### [arkadia-notifications]
+### [Arkadia.Notifications]
 
 #### Quick reference
 
@@ -49,7 +49,7 @@ Arkadia is the aptly named arcade of micro services that are being used for [Sky
 
 -   [`latest`](https://github.com/skyra-project/arkadia/blob/main/Notifications.Dockerfile)
 
-#### What is [arkadia-notifications]
+#### What is [Arkadia.Notifications]
 
 Some description here
 
@@ -128,4 +128,4 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 [support server]: https://join.skyra.pw
 [dotnet]: https://dotnet.microsoft.com
 [grpc]: https://grpc.io
-[arkadia-notifications]: (https://github.com/skyra-project/docker-images/pkgs/container/arkadia-notifications)
+[arkadia.notifications]: (https://github.com/skyra-project/docker-images/pkgs/container/Arkadia.Notifications)
