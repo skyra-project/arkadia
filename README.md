@@ -32,7 +32,7 @@ Arkadia is the aptly named arcade of micro services that are being used for [Sky
 
 ## Published Docker Images
 
-### [arkadia.notifications]
+### [arkadia.notifications][arklink]
 
 #### Quick reference
 
@@ -49,7 +49,7 @@ Arkadia is the aptly named arcade of micro services that are being used for [Sky
 
 -   [`latest`](https://github.com/skyra-project/arkadia/blob/main/Notifications.Dockerfile)
 
-#### What is [arkadia.notifications]
+#### What is [arkadia.notifications][arklink]
 
 Some description here
 
@@ -128,4 +128,4 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 [support server]: https://join.skyra.pw
 [dotnet]: https://dotnet.microsoft.com
 [grpc]: https://grpc.io
-[arkadia.notifications]: (https://github.com/skyra-project/docker-images/pkgs/container/arkadia.notifications)
+[arklink]: (https://github.com/skyra-project/docker-images/pkgs/container/arkadia.notifications)
