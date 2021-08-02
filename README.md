@@ -19,10 +19,10 @@
 -   [Arkadia](#arkadia)
     -   [Description](#description)
     -   [Published Docker Images](#published-docker-images)
-        -   [[arkadia-notifications]](#arkadia-notifications)
+        -   [arkadia-notifications](#arkadia-notifications)
             -   [Quick reference](#quick-reference)
             -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links)
-            -   [What is [arkadia-notifications]](#what-is-arkadia-notifications)
+            -   [What is arkadia-notifications](#what-is-arkadia-notifications)
             -   [Environment Variables](#environment-variables)
     -   [Buy us some doughnuts](#buy-us-some-doughnuts)
 

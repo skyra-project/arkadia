@@ -8,6 +8,7 @@ on:
       - 'sources/**'
       - 'Notifications.Dockerfile'
       - '.github/workflows/continuous-delivery.yml'
+      - 'README.md'
 
 jobs:
   PublishNotifications:
