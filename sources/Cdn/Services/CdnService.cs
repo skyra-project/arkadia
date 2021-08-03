@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Database;
+using Database.Models.Entities;
 using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
@@ -62,10 +64,44 @@ namespace Cdn.Services
 			};
 		}
 
-		public override Task<CdnResponse> Create(CreateRequest request, ServerCallContext _)
+		public override async Task<CdnResponse> Create(CreateRequest request, ServerCallContext _)
 		{
 			using var context = new ArkadiaDbContext();
+
+			var cdnEntryExists = await context.CdnEntries.AnyAsync(entry => entry.Name == request.Name);
+
+			if (cdnEntryExists)
+			{
+				_logger.LogInformation("Attempted to Create() with entry name {Name} but that already exists", request.Name);
+				return new CdnResponse
+				{
+					Result = CdnResult.Duplicate
+				};
+			}
+
+			using var md5 = MD5.Create();
+
+			var etagBytes = md5.ComputeHash(request.Content.ToByteArray());
+			var etagString = BitConverter.ToString(etagBytes).Replace("-", "");
 			
+			var newEntry = new CdnEntry
+			{
+				Name = request.Name,
+				ContentType = request.ContentType,
+				LastModifiedAt = DateTime.Now, 
+				ETag = etagString
+			};
+
+			var entity = await context.CdnEntries.AddAsync(newEntry);
+
+			var path = Path.Join(BaseAssetLocation, entity.Entity.Id.ToString());
+
+			await File.WriteAllBytesAsync(path, request.Content.ToByteArray());
+
+			return new CdnResponse
+			{
+				Result = CdnResult.Ok
+			};
 		}
 	}
 }
