@@ -45,7 +45,7 @@ namespace Cdn
 
 			app.UseEndpoints(endpoints =>
 			{
-				endpoints.MapGrpcService<GreeterService>();
+				endpoints.MapGrpcService<CdnService>();
 			});
 		}
 	}
