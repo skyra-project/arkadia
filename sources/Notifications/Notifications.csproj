@@ -16,9 +16,6 @@
 
     <ItemGroup>
         <Protobuf Include="..\..\assets\protos\*.proto" GrpcServices="Server" />
-        <Protobuf Update="..\..\assets\protos\cdn.proto">
-          <Link>protos\cdn.proto</Link>
-        </Protobuf>
     </ItemGroup>
 
 </Project>
