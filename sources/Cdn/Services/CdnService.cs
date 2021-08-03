@@ -61,5 +61,11 @@ namespace Cdn.Services
 				Content = await ByteString.FromStreamAsync(stream)
 			};
 		}
+
+		public override Task<CdnResponse> Create(CreateRequest request, ServerCallContext _)
+		{
+			using var context = new ArkadiaDbContext();
+			
+		}
 	}
 }
