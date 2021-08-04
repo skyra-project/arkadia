@@ -97,7 +97,91 @@ namespace Cdn.Services
 			var path = Path.Join(BaseAssetLocation, entity.Entity.Id.ToString());
 
 			await File.WriteAllBytesAsync(path, request.Content.ToByteArray());
+			
+			await context.SaveChangesAsync();
+			
+			return new CdnResponse
+			{
+				Result = CdnResult.Ok
+			};
+		}
 
+		public override async Task<CdnResponse> Edit(EditRequest request, ServerCallContext _)
+		{
+			using var context = new ArkadiaDbContext();
+
+			var cdnEntry = await context.CdnEntries.FirstAsync(entry => entry.Name == request.Name);
+
+			if (cdnEntry is null)
+			{
+				return new CdnResponse
+				{
+					Result = CdnResult.DoesNotExist
+				};
+			}
+
+			var path = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
+
+			var exists = File.Exists(path);
+
+			if (!exists)
+			{
+				
+				_logger.LogCritical("File with path {Path} does not exist, when attempting to update contents", path);
+				
+				return new CdnResponse
+				{
+					Result = CdnResult.Error
+				};
+			}
+
+			await File.WriteAllBytesAsync(path, request.Content.ToByteArray());
+			
+			cdnEntry.LastModifiedAt = DateTime.Now;
+
+			await context.SaveChangesAsync();
+
+			return new CdnResponse
+			{
+				Result = CdnResult.Ok
+			};
+		}
+
+		public override async Task<CdnResponse> Delete(DeleteRequest request, ServerCallContext _)
+		{
+			using var context = new ArkadiaDbContext();
+
+			var cdnEntry = await context.CdnEntries.FirstAsync(entry => entry.Name == request.Name);
+
+			if (cdnEntry is null)
+			{
+				_logger.LogInformation("Attempting to delete entry with name {Name}, but it does not exist in the database", request.Name);
+
+				return new CdnResponse
+				{
+					Result = CdnResult.DoesNotExist
+				};
+			}
+
+			var path = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
+
+			var exists = File.Exists(path);
+
+			if (!exists)
+			{
+				_logger.LogCritical("Attempting to delete entry with name {Name} but the file does not exist", request.Name);
+
+				return new CdnResponse
+				{
+					Result = CdnResult.Error
+				};
+			}
+			
+			File.Delete(path);
+
+			context.CdnEntries.Remove(cdnEntry);
+			await context.SaveChangesAsync();
+			
 			return new CdnResponse
 			{
 				Result = CdnResult.Ok
