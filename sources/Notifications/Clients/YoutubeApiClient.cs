@@ -7,7 +7,7 @@ using Remora.Results;
 using Shared;
 using Shared.Extensions;
 
-namespace Notifications
+namespace Notifications.Clients
 {
 	public class YoutubeApiClient
 	{

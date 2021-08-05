@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Cdn.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Cdn.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Cdn
@@ -19,7 +14,7 @@ namespace Cdn
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddGrpc();
-			
+
 			services.AddControllers();
 
 			services.AddLogging(options =>

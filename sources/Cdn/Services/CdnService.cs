@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Database;
@@ -9,22 +8,20 @@ using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Remora.Results;
 using Services;
 using Shared;
-using CdnServiceBase = Services.CdnService.CdnServiceBase;
 
 namespace Cdn.Services
 {
-	public class CdnService : CdnServiceBase
+	public class CdnService : global::Services.CdnService.CdnServiceBase
 	{
-		private ILogger<CdnService> _logger;
-		private readonly string BaseAssetLocation;
+		private readonly string _baseAssetLocation;
+		private readonly ILogger<CdnService> _logger;
 
 		public CdnService(ILogger<CdnService> logger)
 		{
 			_logger = logger;
-			BaseAssetLocation = Environment.GetEnvironmentVariable("BASE_ASSET_LOCATION") 
+			_baseAssetLocation = Environment.GetEnvironmentVariable("BASE_ASSET_LOCATION")
 								?? throw new EnvironmentVariableMissingException("BASE_ASSET_LOCATION");
 		}
 
@@ -42,14 +39,13 @@ namespace Cdn.Services
 				};
 			}
 
-			var path = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
+			var path = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
 			var exists = File.Exists(path);
 
 			if (!exists)
 			{
-				
 				_logger.LogCritical("File with path {Path} was requested and found in the database, but does not exist", path);
-				
+
 				return new CdnFileResponse
 				{
 					Result = CdnResult.Error
@@ -72,9 +68,9 @@ namespace Cdn.Services
 			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
 
 			var content = request.Content.ToByteArray();
-				
+
 			var eTag = GetETag(content);
-			
+
 			if (cdnEntry is null) // insert
 			{
 				var entryEntity = await context.CdnEntries.AddAsync(new CdnEntry
@@ -86,7 +82,7 @@ namespace Cdn.Services
 				});
 
 				cdnEntry = entryEntity.Entity;
-				
+
 				_logger.LogTrace("Creating new entry with name {Name}", request.Name);
 			}
 			else // update
@@ -97,9 +93,9 @@ namespace Cdn.Services
 
 				_logger.LogTrace("Updating entry with name {Name}", request.Name);
 			}
-			
+
 			var path = GetPath(cdnEntry.Id);
-			
+
 			await context.SaveChangesAsync();
 
 			await File.WriteAllBytesAsync(path, content);
@@ -139,12 +135,12 @@ namespace Cdn.Services
 					Result = CdnResult.Error
 				};
 			}
-			
+
 			File.Delete(path);
 
 			context.CdnEntries.Remove(cdnEntry);
 			await context.SaveChangesAsync();
-			
+
 			return new CdnResponse
 			{
 				Result = CdnResult.Ok
@@ -153,13 +149,13 @@ namespace Cdn.Services
 
 		private string GetPath(long id)
 		{
-			return Path.Join(BaseAssetLocation, id.ToString());
+			return Path.Join(_baseAssetLocation, id.ToString());
 		}
 
 		private string GetETag(byte[] content)
 		{
 			using var md5 = MD5.Create();
-			
+
 			var etagBytes = md5.ComputeHash(content);
 			var etagString = BitConverter.ToString(etagBytes).Replace("-", "");
 

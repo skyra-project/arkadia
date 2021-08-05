@@ -1,18 +1,16 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Database;
 using Database.Models.Entities;
-using Grpc.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using FileSystem = System.IO.File;
 using Shared;
+using FileSystem = System.IO.File;
 
 namespace Cdn.Controllers
 {
@@ -22,16 +20,16 @@ namespace Cdn.Controllers
 	{
 		private const int Seconds = 60;
 		private const int Minutes = 60;
-		private readonly string BaseAssetLocation;
 		private readonly ILogger<CdnController> _logger;
+		private readonly string _baseAssetLocation;
 
 		public CdnController(ILogger<CdnController> logger)
 		{
 			_logger = logger;
-			BaseAssetLocation = Environment.GetEnvironmentVariable("BASE_ASSET_LOCATION") 
+			_baseAssetLocation = Environment.GetEnvironmentVariable("BASE_ASSET_LOCATION")
 								?? throw new EnvironmentVariableMissingException("BASE_ASSET_LOCATION");
 		}
-		
+
 		[HttpGet("{name}")]
 		[ResponseCache(Duration = Seconds * Minutes, Location = ResponseCacheLocation.Client, NoStore = false)]
 		public async Task<IActionResult> Get(string name)
@@ -57,7 +55,7 @@ namespace Cdn.Controllers
 				return NotModified();
 			}
 
-			var fileLocation = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
+			var fileLocation = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
 
 			var exists = FileSystem.Exists(fileLocation);
 
@@ -68,12 +66,12 @@ namespace Cdn.Controllers
 			}
 
 			var fileStream = FileSystem.OpenRead(fileLocation);
-			
+
 			Response.Headers.Add("Last-Modified", cdnEntry.LastModifiedAt.ToUniversalTime().ToString("R"));
 			Response.Headers.Add("ETag", cdnEntry.ETag);
-			
+
 			return File(fileStream, cdnEntry.ContentType);
-			
+
 			bool WasModified(CdnEntry asset, RequestHeaders headers)
 			{
 				// RFC 7232 3.2 - If-None-Match
@@ -95,7 +93,14 @@ namespace Cdn.Controllers
 			}
 		}
 
-		private static IActionResult NotModified() => new StatusCodeResult(StatusCodes.Status304NotModified);
-		private static IActionResult InternalError() => new StatusCodeResult(StatusCodes.Status500InternalServerError);
+		private static IActionResult NotModified()
+		{
+			return new StatusCodeResult(StatusCodes.Status304NotModified);
+		}
+
+		private static IActionResult InternalError()
+		{
+			return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+		}
 	}
 }
