@@ -20,8 +20,8 @@ namespace Cdn.Controllers
 	{
 		private const int Seconds = 60;
 		private const int Minutes = 60;
-		private readonly ILogger<CdnController> _logger;
 		private readonly string _baseAssetLocation;
+		private readonly ILogger<CdnController> _logger;
 
 		public CdnController(ILogger<CdnController> logger)
 		{

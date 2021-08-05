@@ -181,7 +181,7 @@ namespace Notifications.Controllers
 				.Elements()
 				.FirstOrDefault(element => element.Name.LocalName == "name")?
 				.Value;
-			
+
 			return channelName;
 		}
 
