@@ -32,7 +32,7 @@ namespace Cdn.Controllers
 								?? throw new EnvironmentVariableMissingException("BASE_ASSET_LOCATION");
 		}
 		
-		[HttpGet("{id}")]
+		[HttpGet("{name}")]
 		[ResponseCache(Duration = Seconds * Minutes, Location = ResponseCacheLocation.Client, NoStore = false)]
 		public async Task<IActionResult> Get(string name)
 		{
