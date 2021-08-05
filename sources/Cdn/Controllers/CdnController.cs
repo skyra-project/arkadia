@@ -7,6 +7,7 @@ using Database;
 using Database.Models.Entities;
 using Grpc.Core;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -35,12 +36,12 @@ namespace Cdn.Controllers
 		[ResponseCache(Duration = Seconds * Minutes, Location = ResponseCacheLocation.Client, NoStore = false)]
 		public async Task<IActionResult> Get(string name)
 		{
-			var headers = Request.GetTypedHeaders();
-			headers.Date = DateTimeOffset.Now;
+			var requestHeaders = Request.GetTypedHeaders();
+			requestHeaders.Date = DateTimeOffset.Now;
 
-			using var context = new ArkadiaDbContext();
+			await using var context = new ArkadiaDbContext();
 
-			var cdnEntry = await context.CdnEntries.FirstAsync(asset => asset.Name == name);
+			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(asset => asset.Name == name);
 
 			if (cdnEntry is null)
 			{
@@ -48,7 +49,7 @@ namespace Cdn.Controllers
 			}
 
 			// RFC 7232 3.3 - If the content was not modified, a 304 "Not Modified" status should be sent.
-			if (!WasModified(cdnEntry))
+			if (!WasModified(cdnEntry, requestHeaders))
 			{
 				// RFC 7232 4.1 - The server generating a 304 response MUST generate any of the following header fields that
 				// would have been sent in a 200 (OK) response to the same request: Cache-Control, Content-Location, Date,
@@ -56,9 +57,6 @@ namespace Cdn.Controllers
 				return NotModified();
 			}
 
-			headers.LastModified = new DateTimeOffset(cdnEntry.LastModifiedAt);
-			headers.Set("ETag", cdnEntry.ETag);
-			
 			var fileLocation = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
 
 			var exists = FileSystem.Exists(fileLocation);
@@ -66,17 +64,18 @@ namespace Cdn.Controllers
 			if (!exists)
 			{
 				_logger.LogCritical("File with path {Path} was requested and found in the database, but does not exist", fileLocation);
-				return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+				return InternalError();
 			}
 
 			var fileStream = FileSystem.OpenRead(fileLocation);
-
+			
+			Response.Headers.Add("Last-Modified", cdnEntry.LastModifiedAt.ToUniversalTime().ToString("R"));
+			Response.Headers.Add("ETag", cdnEntry.ETag);
+			
 			return File(fileStream, cdnEntry.ContentType);
 			
-			bool WasModified(CdnEntry asset)
+			bool WasModified(CdnEntry asset, RequestHeaders headers)
 			{
-				var headers = Request.GetTypedHeaders();
-
 				// RFC 7232 3.2 - If-None-Match
 				if (headers.IfNoneMatch.Any(entry => entry.Tag.Value == asset.ETag))
 				{
@@ -97,5 +96,6 @@ namespace Cdn.Controllers
 		}
 
 		private static IActionResult NotModified() => new StatusCodeResult(StatusCodes.Status304NotModified);
+		private static IActionResult InternalError() => new StatusCodeResult(StatusCodes.Status500InternalServerError);
 	}
 }

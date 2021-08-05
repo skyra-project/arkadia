@@ -9,6 +9,7 @@ using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Remora.Results;
 using Services;
 using Shared;
 using CdnServiceBase = Services.CdnService.CdnServiceBase;
@@ -29,9 +30,9 @@ namespace Cdn.Services
 
 		public override async Task<CdnFileResponse> Get(GetRequest request, ServerCallContext _)
 		{
-			using var context = new ArkadiaDbContext();
+			await using var context = new ArkadiaDbContext();
 
-			var cdnEntry = await context.CdnEntries.FirstAsync(entry => entry.Name == request.Name);
+			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
 
 			if (cdnEntry is null)
 			{
@@ -64,82 +65,44 @@ namespace Cdn.Services
 			};
 		}
 
-		public override async Task<CdnResponse> Create(CreateRequest request, ServerCallContext _)
+		public override async Task<CdnResponse> Upsert(UpsertRequest request, ServerCallContext _)
 		{
-			using var context = new ArkadiaDbContext();
+			await using var context = new ArkadiaDbContext();
 
-			var cdnEntryExists = await context.CdnEntries.AnyAsync(entry => entry.Name == request.Name);
+			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
 
-			if (cdnEntryExists)
-			{
-				_logger.LogInformation("Attempted to Create() with entry name {Name} but that already exists", request.Name);
-				return new CdnResponse
-				{
-					Result = CdnResult.Duplicate
-				};
-			}
-
-			using var md5 = MD5.Create();
-
-			var etagBytes = md5.ComputeHash(request.Content.ToByteArray());
-			var etagString = BitConverter.ToString(etagBytes).Replace("-", "");
+			var content = request.Content.ToByteArray();
+				
+			var eTag = GetETag(content);
 			
-			var newEntry = new CdnEntry
+			if (cdnEntry is null) // insert
 			{
-				Name = request.Name,
-				ContentType = request.ContentType,
-				LastModifiedAt = DateTime.Now, 
-				ETag = etagString
-			};
+				var entryEntity = await context.CdnEntries.AddAsync(new CdnEntry
+				{
+					Name = request.Name,
+					ContentType = request.ContentType,
+					ETag = eTag,
+					LastModifiedAt = DateTime.Now
+				});
 
-			var entity = await context.CdnEntries.AddAsync(newEntry);
+				cdnEntry = entryEntity.Entity;
+				
+				_logger.LogTrace("Creating new entry with name {Name}", request.Name);
+			}
+			else // update
+			{
+				cdnEntry.ContentType = request.ContentType;
+				cdnEntry.LastModifiedAt = DateTime.Now;
+				cdnEntry.ETag = eTag;
 
-			var path = Path.Join(BaseAssetLocation, entity.Entity.Id.ToString());
-
-			await File.WriteAllBytesAsync(path, request.Content.ToByteArray());
+				_logger.LogTrace("Updating entry with name {Name}", request.Name);
+			}
+			
+			var path = GetPath(cdnEntry.Id);
 			
 			await context.SaveChangesAsync();
-			
-			return new CdnResponse
-			{
-				Result = CdnResult.Ok
-			};
-		}
 
-		public override async Task<CdnResponse> Edit(EditRequest request, ServerCallContext _)
-		{
-			using var context = new ArkadiaDbContext();
-
-			var cdnEntry = await context.CdnEntries.FirstAsync(entry => entry.Name == request.Name);
-
-			if (cdnEntry is null)
-			{
-				return new CdnResponse
-				{
-					Result = CdnResult.DoesNotExist
-				};
-			}
-
-			var path = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
-
-			var exists = File.Exists(path);
-
-			if (!exists)
-			{
-				
-				_logger.LogCritical("File with path {Path} does not exist, when attempting to update contents", path);
-				
-				return new CdnResponse
-				{
-					Result = CdnResult.Error
-				};
-			}
-
-			await File.WriteAllBytesAsync(path, request.Content.ToByteArray());
-			
-			cdnEntry.LastModifiedAt = DateTime.Now;
-
-			await context.SaveChangesAsync();
+			await File.WriteAllBytesAsync(path, content);
 
 			return new CdnResponse
 			{
@@ -149,9 +112,9 @@ namespace Cdn.Services
 
 		public override async Task<CdnResponse> Delete(DeleteRequest request, ServerCallContext _)
 		{
-			using var context = new ArkadiaDbContext();
+			await using var context = new ArkadiaDbContext();
 
-			var cdnEntry = await context.CdnEntries.FirstAsync(entry => entry.Name == request.Name);
+			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
 
 			if (cdnEntry is null)
 			{
@@ -163,7 +126,7 @@ namespace Cdn.Services
 				};
 			}
 
-			var path = Path.Join(BaseAssetLocation, cdnEntry.Id.ToString());
+			var path = GetPath(cdnEntry.Id);
 
 			var exists = File.Exists(path);
 
@@ -186,6 +149,21 @@ namespace Cdn.Services
 			{
 				Result = CdnResult.Ok
 			};
+		}
+
+		private string GetPath(long id)
+		{
+			return Path.Join(BaseAssetLocation, id.ToString());
+		}
+
+		private string GetETag(byte[] content)
+		{
+			using var md5 = MD5.Create();
+			
+			var etagBytes = md5.ComputeHash(content);
+			var etagString = BitConverter.ToString(etagBytes).Replace("-", "");
+
+			return etagString;
 		}
 	}
 }
