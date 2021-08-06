@@ -4,12 +4,8 @@ using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Cdn.Factories;
-using Cdn.Repositories;
-using Database;
-using Database.Models.Entities;
 using Google.Protobuf;
 using Grpc.Core;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Services;
 using Shared;
@@ -40,10 +36,7 @@ namespace Cdn.Services
 
 			if (cdnEntry is null)
 			{
-				return new CdnFileResponse
-				{
-					Result = CdnResult.DoesNotExist
-				};
+				return DoesNotExistFile();
 			}
 
 			var path = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
@@ -53,19 +46,12 @@ namespace Cdn.Services
 			{
 				_logger.LogCritical("File with path {Path} was requested and found in the database, but does not exist", path);
 
-				return new CdnFileResponse
-				{
-					Result = CdnResult.Error
-				};
+				return ErrorFile();
 			}
 
 			var stream = _fileSystem.File.OpenRead(path);
 
-			return new CdnFileResponse
-			{
-				Result = CdnResult.Ok,
-				Content = await ByteString.FromStreamAsync(stream)
-			};
+			return OkFile(stream);
 		}
 
 		public override async Task<CdnResponse> Upsert(UpsertRequest request, ServerCallContext _)
@@ -82,26 +68,20 @@ namespace Cdn.Services
 
 			await _fileSystem.File.WriteAllBytesAsync(path, content);
 
-			return new CdnResponse
-			{
-				Result = CdnResult.Ok
-			};
+			return Ok();
 		}
 
 		public override async Task<CdnResponse> Delete(DeleteRequest request, ServerCallContext _)
 		{
-			await using var repositry = _repositoryFactory.GetRepository();
+			await using var repository = _repositoryFactory.GetRepository();
 
-			var cdnEntry = await repositry.DeleteEntryAsync(request.Name);
+			var cdnEntry = await repository.DeleteEntryAsync(request.Name);
 
 			if (cdnEntry is null)
 			{
 				_logger.LogInformation("Attempting to delete entry with name {Name}, but it does not exist in the database", request.Name);
 
-				return new CdnResponse
-				{
-					Result = CdnResult.DoesNotExist
-				};
+				return DoesNotExist();
 			}
 
 			var path = GetPath(cdnEntry.Id);
@@ -112,18 +92,12 @@ namespace Cdn.Services
 			{
 				_logger.LogCritical("Attempting to delete entry with name {Name} but the file does not exist", request.Name);
 
-				return new CdnResponse
-				{
-					Result = CdnResult.Error
-				};
+				return Error();
 			}
 
 			_fileSystem.File.Delete(path);
 
-			return new CdnResponse
-			{
-				Result = CdnResult.Ok
-			};
+			return Ok();
 		}
 
 		private string GetPath(long id)
@@ -140,5 +114,12 @@ namespace Cdn.Services
 
 			return etagString;
 		}
+
+		private static CdnResponse Ok() => new CdnResponse { Result = CdnResult.Ok };
+		private static CdnResponse DoesNotExist() => new CdnResponse { Result = CdnResult.DoesNotExist };
+		private static CdnResponse Error() => new CdnResponse { Result = CdnResult.Error };
+		private static CdnFileResponse OkFile(Stream stream) => new CdnFileResponse { Result = CdnResult.Ok, Content = ByteString.FromStream(stream) };
+		private static CdnFileResponse DoesNotExistFile() => new CdnFileResponse { Result = CdnResult.DoesNotExist };
+		private static CdnFileResponse ErrorFile() => new CdnFileResponse { Result = CdnResult.Error };
 	}
 }

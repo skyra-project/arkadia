@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
+using Cdn.Factories;
 using Database;
 using Database.Models.Entities;
 using Microsoft.AspNetCore.Http;
@@ -22,10 +24,14 @@ namespace Cdn.Controllers
 		private const int Minutes = 60;
 		private readonly string _baseAssetLocation;
 		private readonly ILogger<CdnController> _logger;
+		private readonly ICdnRepositoryFactory _repositoryFactory;
+		private readonly IFileSystem _fileSystem;
 
-		public CdnController(ILogger<CdnController> logger)
+		public CdnController(ILogger<CdnController> logger, ICdnRepositoryFactory repositoryFactory, IFileSystem fileSystem)
 		{
 			_logger = logger;
+			_repositoryFactory = repositoryFactory;
+			_fileSystem = fileSystem;
 			_baseAssetLocation = Environment.GetEnvironmentVariable("BASE_ASSET_LOCATION")
 								?? throw new EnvironmentVariableMissingException("BASE_ASSET_LOCATION");
 		}
@@ -37,9 +43,9 @@ namespace Cdn.Controllers
 			var requestHeaders = Request.GetTypedHeaders();
 			requestHeaders.Date = DateTimeOffset.Now;
 
-			await using var context = new ArkadiaDbContext();
+			await using var repository = _repositoryFactory.GetRepository();
 
-			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(asset => asset.Name == name);
+			var cdnEntry = await repository.GetEntryByNameOrDefaultAsync(name);
 
 			if (cdnEntry is null)
 			{
@@ -57,7 +63,7 @@ namespace Cdn.Controllers
 
 			var fileLocation = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
 
-			var exists = FileSystem.Exists(fileLocation);
+			var exists = _fileSystem.File.Exists(fileLocation);
 
 			if (!exists)
 			{
@@ -65,7 +71,7 @@ namespace Cdn.Controllers
 				return InternalError();
 			}
 
-			var fileStream = FileSystem.OpenRead(fileLocation);
+			var fileStream = _fileSystem.File.OpenRead(fileLocation);
 
 			Response.Headers.Add("Last-Modified", cdnEntry.LastModifiedAt.ToUniversalTime().ToString("R"));
 			Response.Headers.Add("ETag", cdnEntry.ETag);
