@@ -13,6 +13,9 @@ namespace Database
 		public DbSet<Guild> Guilds { get; set; }
 		public DbSet<YoutubeSubscription> YoutubeSubscriptions { get; set; }
 
+		public ArkadiaDbContext() {}
+		public ArkadiaDbContext(DbContextOptions<ArkadiaDbContext> options) : base(options) {}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			if (optionsBuilder.IsConfigured)

@@ -5,17 +5,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Protobuf Include="..\..\assets\protos\cdn.proto" GrpcServices="Server"/>
+        <Protobuf Include="..\..\assets\protos\cdn.proto" GrpcServices="Server" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Grpc.AspNetCore" Version="2.32.0"/>
-        <PackageReference Include="Sentry.Extensions.Logging" Version="3.8.3"/>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.32.0" />
+        <PackageReference Include="Sentry.Extensions.Logging" Version="3.8.3" />
+        <PackageReference Include="System.IO.Abstractions" Version="13.2.43" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Database\Database.csproj"/>
-        <ProjectReference Include="..\Shared\Shared.csproj"/>
+        <ProjectReference Include="..\Database\Database.csproj" />
+        <ProjectReference Include="..\Shared\Shared.csproj" />
     </ItemGroup>
 
 </Project>

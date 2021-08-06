@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO.Abstractions;
+using Cdn.Factories;
 using Cdn.Services;
+using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +17,8 @@ namespace Cdn
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddGrpc();
+			services.AddSingleton<ICdnRepositoryFactory, DefaultCdnRepositoryFactory>();
+			services.AddSingleton<IFileSystem, FileSystem>();
 
 			services.AddControllers();
 

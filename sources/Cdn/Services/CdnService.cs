@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.IO.Abstractions;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Cdn.Factories;
+using Cdn.Repositories;
 using Database;
 using Database.Models.Entities;
 using Google.Protobuf;
@@ -17,19 +20,23 @@ namespace Cdn.Services
 	{
 		private readonly string _baseAssetLocation;
 		private readonly ILogger<CdnService> _logger;
+		private readonly IFileSystem _fileSystem;
+		private readonly ICdnRepositoryFactory _repositoryFactory;
 
-		public CdnService(ILogger<CdnService> logger)
+		public CdnService(ILogger<CdnService> logger, IFileSystem fileSystem, ICdnRepositoryFactory repositoryFactory)
 		{
 			_logger = logger;
+			_fileSystem = fileSystem;
+			_repositoryFactory = repositoryFactory;
 			_baseAssetLocation = Environment.GetEnvironmentVariable("BASE_ASSET_LOCATION")
 								?? throw new EnvironmentVariableMissingException("BASE_ASSET_LOCATION");
 		}
 
 		public override async Task<CdnFileResponse> Get(GetRequest request, ServerCallContext _)
 		{
-			await using var context = new ArkadiaDbContext();
+			await using var repository = _repositoryFactory.GetRepository();
 
-			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
+			var cdnEntry = await repository.GetEntryByNameOrDefaultAsync(request.Name);
 
 			if (cdnEntry is null)
 			{
@@ -40,7 +47,7 @@ namespace Cdn.Services
 			}
 
 			var path = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
-			var exists = File.Exists(path);
+			var exists = _fileSystem.File.Exists(path);
 
 			if (!exists)
 			{
@@ -52,7 +59,7 @@ namespace Cdn.Services
 				};
 			}
 
-			var stream = File.OpenRead(path);
+			var stream = _fileSystem.File.OpenRead(path);
 
 			return new CdnFileResponse
 			{
@@ -63,42 +70,17 @@ namespace Cdn.Services
 
 		public override async Task<CdnResponse> Upsert(UpsertRequest request, ServerCallContext _)
 		{
-			await using var context = new ArkadiaDbContext();
-
-			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
+			await using var factory = _repositoryFactory.GetRepository();
 
 			var content = request.Content.ToByteArray();
 
 			var eTag = GetETag(content);
-
-			if (cdnEntry is null) // insert
-			{
-				var entryEntity = await context.CdnEntries.AddAsync(new CdnEntry
-				{
-					Name = request.Name,
-					ContentType = request.ContentType,
-					ETag = eTag,
-					LastModifiedAt = DateTime.Now
-				});
-
-				cdnEntry = entryEntity.Entity;
-
-				_logger.LogTrace("Creating new entry with name {Name}", request.Name);
-			}
-			else // update
-			{
-				cdnEntry.ContentType = request.ContentType;
-				cdnEntry.LastModifiedAt = DateTime.Now;
-				cdnEntry.ETag = eTag;
-
-				_logger.LogTrace("Updating entry with name {Name}", request.Name);
-			}
-
+			
+			var cdnEntry = await factory.UpsertEntryAsync(request.Name, request.ContentType, eTag, DateTime.Now);
+			
 			var path = GetPath(cdnEntry.Id);
 
-			await context.SaveChangesAsync();
-
-			await File.WriteAllBytesAsync(path, content);
+			await _fileSystem.File.WriteAllBytesAsync(path, content);
 
 			return new CdnResponse
 			{
@@ -108,9 +90,9 @@ namespace Cdn.Services
 
 		public override async Task<CdnResponse> Delete(DeleteRequest request, ServerCallContext _)
 		{
-			await using var context = new ArkadiaDbContext();
+			await using var repositry = _repositoryFactory.GetRepository();
 
-			var cdnEntry = await context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == request.Name);
+			var cdnEntry = await repositry.DeleteEntryAsync(request.Name);
 
 			if (cdnEntry is null)
 			{
@@ -124,7 +106,7 @@ namespace Cdn.Services
 
 			var path = GetPath(cdnEntry.Id);
 
-			var exists = File.Exists(path);
+			var exists = _fileSystem.File.Exists(path);
 
 			if (!exists)
 			{
@@ -136,10 +118,7 @@ namespace Cdn.Services
 				};
 			}
 
-			File.Delete(path);
-
-			context.CdnEntries.Remove(cdnEntry);
-			await context.SaveChangesAsync();
+			_fileSystem.File.Delete(path);
 
 			return new CdnResponse
 			{
