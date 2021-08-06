@@ -15,6 +15,7 @@ using CdnService = Cdn.Services.CdnService;
 namespace UnitTests.Cdn.Service
 {
 	[TestFixture]
+	[Parallelizable]
 	public class CdnServiceTests
 	{
 		[Test]
