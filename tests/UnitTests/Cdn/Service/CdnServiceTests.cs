@@ -18,13 +18,15 @@ namespace UnitTests.Cdn.Service
 	[Parallelizable]
 	public class CdnServiceTests
 	{
+		
+		[OneTimeSetUp]
+		public void Setup() => Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
+		
 		[Test]
 		public async Task CdnService_Get_ShouldReturnItem_WhenExists()
 		{
 			
 			// arrange
-
-			Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
 
 			await using var repository = new MockCdnRepository();
 			
@@ -95,8 +97,6 @@ namespace UnitTests.Cdn.Service
 		{
 			
 			// arrange
-
-			Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
 
 			await using var repository = new MockCdnRepository();
 			
