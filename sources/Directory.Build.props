@@ -1,11 +1,6 @@
 <Project>
-    <PropertyGroup>
-        <Deterministic>true</Deterministic>
-        <Features>strict</Features>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
 
-    <!-- We add InternalsVisibleTo to every project, making sure Skyra.*Tests can see internals. -->
+    <!-- We add InternalsVisibleTo to every project, making sure *Tests can see internals. -->
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
