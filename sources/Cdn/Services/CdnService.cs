@@ -60,13 +60,11 @@ namespace Cdn.Services
 			await using var factory = _repositoryFactory.GetRepository();
 
 			var content = request.Content.ToByteArray();
-
 			var eTag = GetETag(content);
 
 			var cdnEntry = await factory.UpsertEntryAsync(request.Name, request.ContentType, eTag, DateTime.Now);
 
 			var path = GetPath(cdnEntry.Id);
-
 			await _fileSystem.File.WriteAllBytesAsync(path, content);
 
 			return Ok();
