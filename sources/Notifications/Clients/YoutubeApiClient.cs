@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -48,10 +49,10 @@ namespace Notifications.Clients
 			return Result<bool>.FromError(new YoutubeApiError(result.ReasonPhrase ?? ""));
 		}
 
+		[ExcludeFromCodeCoverage]
 		private class YoutubeApiResponse
 		{
 			public List<Item> Items { get; set; } = null!;
-
 			public bool IsLive => Items[0].Snippet.LiveBroadcastContent == "live";
 
 			public class Item
@@ -65,6 +66,7 @@ namespace Notifications.Clients
 			}
 		}
 
+		[ExcludeFromCodeCoverage]
 		private class YoutubeApiError : IResultError
 		{
 			public YoutubeApiError(string message)

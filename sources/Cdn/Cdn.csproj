@@ -5,11 +5,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Protobuf Include="..\..\assets\protos\cdn.proto" GrpcServices="Server" />
+        <Protobuf Include="..\..\assets\protos\cdn.proto" GrpcServices="Server" OutputOptions="file_extension='g.cs'" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Grpc.AspNetCore" Version="2.32.0" />
+        <PackageReference Include="Grpc.AspNetCore" Version="2.39.0-pre1" />
         <PackageReference Include="Sentry.Extensions.Logging" Version="3.8.3" />
         <PackageReference Include="System.IO.Abstractions" Version="13.2.43" />
     </ItemGroup>

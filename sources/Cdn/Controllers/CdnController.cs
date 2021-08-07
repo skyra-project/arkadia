@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -38,6 +39,7 @@ namespace Cdn.Controllers
 
 		[HttpGet("{name}")]
 		[ResponseCache(Duration = Seconds * Minutes, Location = ResponseCacheLocation.Client, NoStore = false)]
+		[ExcludeFromCodeCoverage(Justification = "Too complex to mock.")]
 		public async Task<IActionResult> Get(string name)
 		{
 			var requestHeaders = Request.GetTypedHeaders();
@@ -99,11 +101,13 @@ namespace Cdn.Controllers
 			}
 		}
 
+		[ExcludeFromCodeCoverage]
 		private static IActionResult NotModified()
 		{
 			return new StatusCodeResult(StatusCodes.Status304NotModified);
 		}
 
+		[ExcludeFromCodeCoverage]
 		private static IActionResult InternalError()
 		{
 			return new StatusCodeResult(StatusCodes.Status500InternalServerError);

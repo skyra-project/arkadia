@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
@@ -115,11 +116,17 @@ namespace Cdn.Services
 			return etagString;
 		}
 
+		[ExcludeFromCodeCoverage]
 		private static CdnResponse Ok() => new CdnResponse { Result = CdnResult.Ok };
+		[ExcludeFromCodeCoverage]
 		private static CdnResponse DoesNotExist() => new CdnResponse { Result = CdnResult.DoesNotExist };
+		[ExcludeFromCodeCoverage]
 		private static CdnResponse Error() => new CdnResponse { Result = CdnResult.Error };
+		[ExcludeFromCodeCoverage]
 		private static CdnFileResponse OkFile(Stream stream) => new CdnFileResponse { Result = CdnResult.Ok, Content = ByteString.FromStream(stream) };
+		[ExcludeFromCodeCoverage]
 		private static CdnFileResponse DoesNotExistFile() => new CdnFileResponse { Result = CdnResult.DoesNotExist };
+		[ExcludeFromCodeCoverage]
 		private static CdnFileResponse ErrorFile() => new CdnFileResponse { Result = CdnResult.Error };
 	}
 }

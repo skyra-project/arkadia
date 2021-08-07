@@ -1,4 +1,5 @@
-﻿using Remora.Results;
+﻿using System.Diagnostics.CodeAnalysis;
+using Remora.Results;
 
 namespace Notifications.Errors
 {

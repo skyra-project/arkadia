@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Database;
 using Database.Models.Entities;
@@ -17,6 +18,7 @@ namespace Cdn.Repositories
 			_logger = logger;
 		}
 
+		[ExcludeFromCodeCoverage]
 		public ValueTask DisposeAsync() => _context.DisposeAsync();
 
 		public Task<CdnEntry?> GetEntryByNameOrDefaultAsync(string name)
@@ -61,7 +63,8 @@ namespace Cdn.Repositories
 
 			if (entry is not null)
 			{
-				_context.CdnEntries.Remove(entry);	
+				_context.CdnEntries.Remove(entry);
+				await _context.SaveChangesAsync();
 			}
 			
 			return entry;

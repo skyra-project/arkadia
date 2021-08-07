@@ -10,6 +10,18 @@ jobs:
   DotNetCI:
     name: Dotnet Build & Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ghcr.io/skyra-project/postgres:latest
+        env:
+          POSTGRES_DB: skyra-dotnet-test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
@@ -33,6 +45,19 @@ jobs:
         with:
           name: dotnet-coverage-unit
           path: tests/UnitTests/TestResults/
+      - name: Run C# integration tests
+        run: |
+          dotnet new tool-manifest
+          dotnet tool install dotnet-ef
+          dotnet tool run dotnet-ef database update --project sources/Database
+          dotnet test tests/IntegrationTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+        env:
+          POSTGRES_DB: skyra-dotnet-test
+      - name: Store code coverage report (Integration Tests)
+        uses: actions/upload-artifact@v2
+        with:
+          name: dotnet-coverage-integration
+          path: tests/IntegrationTests/TestResults/
 
   Upload_Coverage_Report:
     name: Upload coverage report to codecov
@@ -48,6 +73,11 @@ jobs:
         with:
           name: dotnet-coverage-unit
           path: tests/UnitTests/TestResults/
+      - name: Download DotNet IT Coverage report
+        uses: actions/download-artifact@v2
+        with:
+          name: dotnet-coverage-integration
+          path: tests/IntegrationTests/TestResults/
       - name: Codecov Upload
         uses: codecov/codecov-action@v2.0.2
         with:
