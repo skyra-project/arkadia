@@ -188,3 +188,4 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 [dotnet]: https://dotnet.microsoft.com
 [grpc]: https://grpc.io
 [`arkadia.notifications`]: https://github.com/skyra-project/docker-images/pkgs/container/arkadia.notifications
+[`arkadia.cdn`]: https://github.com/skyra-project/docker-images/pkgs/container/arkadia.cdn
