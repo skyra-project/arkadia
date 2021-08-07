@@ -7,6 +7,7 @@ on:
     paths:
       - 'sources/**'
       - 'Notifications.Dockerfile'
+      - 'Cdn.Dockerfile'
       - '.github/workflows/continuous-delivery.yml'
       - 'README.md'
 
@@ -34,3 +35,10 @@ jobs:
           context: .
           file: Notifications.Dockerfile
           tags: ghcr.io/skyra-project/arkadia.notifications:latest
+      - name: Build and push CDN Docker image
+        uses: docker/build-push-action@v2.6.1
+        with:
+          push: true
+          context: .
+          file: Cdn.Dockerfile
+          tags: ghcr.io/skyra-project/arkadia.cdn:latest
