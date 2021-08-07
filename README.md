@@ -101,8 +101,8 @@ The hub then sends an authentication request, to ensure we wanted to subscribe o
     The database to use in Postgres  
     _default:_ `arkadia`
 -   `SENTRY_URL`  
-    The DSN url for Sentry (null means no Sentry reporting)  
-    _default:_ `null`
+    The DSN url for Sentry (leave empty for no Sentry reporting)  
+    _default:_ `''`
 	
 
 ### [`arkadia.cdn`]
@@ -158,8 +158,8 @@ Arkadia.Cdn is a CDN that conforms to the RFC 7232 spec, internally interacted w
     The database to use in Postgres  
     _default:_ `arkadia`
 -   `SENTRY_URL`  
-    The DSN url for Sentry (null means no Sentry reporting)  
-    _default:_ `null`
+    The DSN url for Sentry (leave empty for no Sentry reporting)  
+    _default:_ `''`
 
 ---
 
