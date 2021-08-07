@@ -39,7 +39,7 @@ jobs:
       - name: Build C# code
         run: dotnet build
       - name: Run C# unit tests
-        run: dotnet test tests/UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+        run: dotnet test tests/UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings -c Release
       - name: Store code coverage report (Unit Tests)
         uses: actions/upload-artifact@v2
         with:
@@ -50,7 +50,7 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install dotnet-ef
           dotnet tool run dotnet-ef database update --project sources/Database
-          dotnet test tests/IntegrationTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings
+          dotnet test tests/IntegrationTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings -c Release
         env:
           POSTGRES_DB: skyra-dotnet-test
       - name: Store code coverage report (Integration Tests)
