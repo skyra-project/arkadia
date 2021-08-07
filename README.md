@@ -26,10 +26,10 @@
             -   [What is arkadia.notifications](#what-is-arkadianotifications)
             -   [Environment Variables](#environment-variables)
 	    -   [arkadia.cdn](#arkadiacdn)
-            -   [Quick reference](#quick-reference)
-            -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links)
+            -   [Quick reference](#quick-reference-1)
+            -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links-1)
             -   [What is arkadia.notifications](#what-is-arkadiacdn)
-            -   [Environment Variables](#environment-variables)		
+            -   [Environment Variables](#environment-variables-1)		
     -   [Buy us some doughnuts](#buy-us-some-doughnuts)
 
 ## Description
