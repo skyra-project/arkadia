@@ -15,6 +15,7 @@ using FileSystem = System.IO.File;
 
 namespace Cdn.Controllers
 {
+	[ExcludeFromCodeCoverage(Justification = "Too complex to mock.")]
 	[ApiController]
 	[Route("[controller]")]
 	public class CdnController : ControllerBase
@@ -37,7 +38,6 @@ namespace Cdn.Controllers
 
 		[HttpGet("{name}")]
 		[ResponseCache(Duration = Seconds * Minutes, Location = ResponseCacheLocation.Client, NoStore = false)]
-		[ExcludeFromCodeCoverage(Justification = "Too complex to mock.")]
 		public async Task<IActionResult> Get(string name)
 		{
 			var requestHeaders = Request.GetTypedHeaders();
