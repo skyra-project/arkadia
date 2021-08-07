@@ -16,8 +16,8 @@ namespace Cdn.Services
 	public class CdnService : global::Services.CdnService.CdnServiceBase
 	{
 		private readonly string _baseAssetLocation;
-		private readonly ILogger<CdnService> _logger;
 		private readonly IFileSystem _fileSystem;
+		private readonly ILogger<CdnService> _logger;
 		private readonly ICdnRepositoryFactory _repositoryFactory;
 
 		public CdnService(ILogger<CdnService> logger, IFileSystem fileSystem, ICdnRepositoryFactory repositoryFactory)
@@ -62,9 +62,9 @@ namespace Cdn.Services
 			var content = request.Content.ToByteArray();
 
 			var eTag = GetETag(content);
-			
+
 			var cdnEntry = await factory.UpsertEntryAsync(request.Name, request.ContentType, eTag, DateTime.Now);
-			
+
 			var path = GetPath(cdnEntry.Id);
 
 			await _fileSystem.File.WriteAllBytesAsync(path, content);
@@ -117,16 +117,39 @@ namespace Cdn.Services
 		}
 
 		[ExcludeFromCodeCoverage]
-		private static CdnResponse Ok() => new CdnResponse { Result = CdnResult.Ok };
+		private static CdnResponse Ok()
+		{
+			return new CdnResponse { Result = CdnResult.Ok };
+		}
+
 		[ExcludeFromCodeCoverage]
-		private static CdnResponse DoesNotExist() => new CdnResponse { Result = CdnResult.DoesNotExist };
+		private static CdnResponse DoesNotExist()
+		{
+			return new CdnResponse { Result = CdnResult.DoesNotExist };
+		}
+
 		[ExcludeFromCodeCoverage]
-		private static CdnResponse Error() => new CdnResponse { Result = CdnResult.Error };
+		private static CdnResponse Error()
+		{
+			return new CdnResponse { Result = CdnResult.Error };
+		}
+
 		[ExcludeFromCodeCoverage]
-		private static CdnFileResponse OkFile(Stream stream) => new CdnFileResponse { Result = CdnResult.Ok, Content = ByteString.FromStream(stream) };
+		private static CdnFileResponse OkFile(Stream stream)
+		{
+			return new CdnFileResponse { Result = CdnResult.Ok, Content = ByteString.FromStream(stream) };
+		}
+
 		[ExcludeFromCodeCoverage]
-		private static CdnFileResponse DoesNotExistFile() => new CdnFileResponse { Result = CdnResult.DoesNotExist };
+		private static CdnFileResponse DoesNotExistFile()
+		{
+			return new CdnFileResponse { Result = CdnResult.DoesNotExist };
+		}
+
 		[ExcludeFromCodeCoverage]
-		private static CdnFileResponse ErrorFile() => new CdnFileResponse { Result = CdnResult.Error };
+		private static CdnFileResponse ErrorFile()
+		{
+			return new CdnFileResponse { Result = CdnResult.Error };
+		}
 	}
 }

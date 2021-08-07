@@ -6,13 +6,13 @@ namespace UnitTests.Cdn.Service
 	public class MockCdnRepositoryFactory : ICdnRepositoryFactory
 	{
 
-		private ICdnRepository? _instance;
-		
+		private readonly ICdnRepository? _instance;
+
 		public MockCdnRepositoryFactory(ICdnRepository instance)
 		{
 			_instance = instance;
 		}
-		
+
 		public ICdnRepository GetRepository()
 		{
 			return _instance ?? new MockCdnRepository();

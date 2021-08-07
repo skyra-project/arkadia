@@ -5,12 +5,10 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Threading.Tasks;
 using Cdn.Factories;
-using Database;
 using Database.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Shared;
 using FileSystem = System.IO.File;
@@ -24,9 +22,9 @@ namespace Cdn.Controllers
 		private const int Seconds = 60;
 		private const int Minutes = 60;
 		private readonly string _baseAssetLocation;
+		private readonly IFileSystem _fileSystem;
 		private readonly ILogger<CdnController> _logger;
 		private readonly ICdnRepositoryFactory _repositoryFactory;
-		private readonly IFileSystem _fileSystem;
 
 		public CdnController(ILogger<CdnController> logger, ICdnRepositoryFactory repositoryFactory, IFileSystem fileSystem)
 		{

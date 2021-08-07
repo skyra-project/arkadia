@@ -2,7 +2,6 @@
 using System.IO.Abstractions;
 using Cdn.Factories;
 using Cdn.Services;
-using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;

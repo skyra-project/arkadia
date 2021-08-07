@@ -10,8 +10,8 @@ namespace Cdn.Repositories
 {
 	public class CdnRepository : ICdnRepository
 	{
-		private readonly ILogger<CdnRepository> _logger;
 		private readonly ArkadiaDbContext _context = new ArkadiaDbContext();
+		private readonly ILogger<CdnRepository> _logger;
 
 		public CdnRepository(ILogger<CdnRepository> logger)
 		{
@@ -19,7 +19,10 @@ namespace Cdn.Repositories
 		}
 
 		[ExcludeFromCodeCoverage]
-		public ValueTask DisposeAsync() => _context.DisposeAsync();
+		public ValueTask DisposeAsync()
+		{
+			return _context.DisposeAsync();
+		}
 
 		public Task<CdnEntry?> GetEntryByNameOrDefaultAsync(string name)
 		{
@@ -29,7 +32,7 @@ namespace Cdn.Repositories
 		public async ValueTask<CdnEntry> UpsertEntryAsync(string name, string contentType, string eTag, DateTime lastModifiedAt)
 		{
 			var entry = await GetEntryByNameOrDefaultAsync(name);
-			
+
 			if (entry is null) // insert
 			{
 				var entryEntity = await _context.CdnEntries.AddAsync(new CdnEntry
@@ -66,7 +69,7 @@ namespace Cdn.Repositories
 				_context.CdnEntries.Remove(entry);
 				await _context.SaveChangesAsync();
 			}
-			
+
 			return entry;
 		}
 	}

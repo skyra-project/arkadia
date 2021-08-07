@@ -10,7 +10,7 @@ namespace UnitTests.Cdn.Service
 	public class MockCdnRepository : ICdnRepository
 	{
 
-		private List<CdnEntry> _entries = new List<CdnEntry>();
+		private readonly List<CdnEntry> _entries = new List<CdnEntry>();
 
 		public ValueTask DisposeAsync()
 		{
@@ -29,7 +29,6 @@ namespace UnitTests.Cdn.Service
 
 			if (entry is null)
 			{
-
 				entry = new CdnEntry
 				{
 					Id = _entries.Count + 1,
@@ -38,7 +37,7 @@ namespace UnitTests.Cdn.Service
 					ETag = eTag,
 					LastModifiedAt = lastModifiedAt
 				};
-				
+
 				_entries.Add(entry);
 			}
 			else

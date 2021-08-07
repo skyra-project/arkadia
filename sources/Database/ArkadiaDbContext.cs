@@ -11,12 +11,18 @@ namespace Database
 	[ExcludeFromCodeCoverage]
 	public class ArkadiaDbContext : DbContext
 	{
+
+		public ArkadiaDbContext()
+		{
+		}
+
+		public ArkadiaDbContext(DbContextOptions<ArkadiaDbContext> options) : base(options)
+		{
+		}
+
 		public DbSet<CdnEntry> CdnEntries { get; set; }
 		public DbSet<Guild> Guilds { get; set; }
 		public DbSet<YoutubeSubscription> YoutubeSubscriptions { get; set; }
-
-		public ArkadiaDbContext() {}
-		public ArkadiaDbContext(DbContextOptions<ArkadiaDbContext> options) : base(options) {}
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
