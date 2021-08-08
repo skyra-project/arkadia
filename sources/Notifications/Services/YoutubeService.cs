@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Database;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Notifications.Extensions;
+using Notifications.Factories;
 using Notifications.Managers;
 using Notifications.Models;
 using Services;
@@ -20,15 +21,18 @@ namespace Notifications.Services
 		private readonly ILogger<YoutubeService> _logger;
 		private readonly ConcurrentQueue<Notification> _notificationQueue;
 		private readonly SubscriptionManager _subscriptionManager;
+		private readonly IYoutubeRepositoryFactory _repositoryFactory;
 
-		public YoutubeService(ConcurrentQueue<Notification> notificationQueue, ILogger<YoutubeService> logger, SubscriptionManager subscriptionManager)
+		public YoutubeService(ConcurrentQueue<Notification> notificationQueue, ILogger<YoutubeService> logger, SubscriptionManager subscriptionManager, IYoutubeRepositoryFactory repositoryFactory)
 		{
 			_notificationQueue = notificationQueue;
 			_logger = logger;
 			_subscriptionManager = subscriptionManager;
+			_repositoryFactory = repositoryFactory;
 		}
 
-		public override async Task NotificationStream(Empty request, IServerStreamWriter<UploadNotification> responseStream, ServerCallContext context)
+		[DoesNotReturn]
+		public override async Task NotificationStream(Empty request, IServerStreamWriter<UploadNotification> responseStream, ServerCallContext _)
 		{
 			while (true)
 			{
@@ -39,9 +43,9 @@ namespace Notifications.Services
 
 				_logger.LogInformation("Sending notification {@Notification}", notification);
 
-				await using var database = new ArkadiaDbContext();
+				await using var factory = _repositoryFactory.GetRepository();
 
-				var subscription = await database.YoutubeSubscriptions.FindAsync(notification.ChannelId);
+				var subscription = await factory.GetSubscriptionByIdOrDefaultAsync(notification.ChannelId);
 
 				if (subscription is null)
 				{
@@ -55,7 +59,7 @@ namespace Notifications.Services
 				for (var index = 0; index < subscription.GuildIds.Length; index++)
 				{
 					var guildId = subscription.GuildIds[index];
-					var guild = await database.Guilds.FindAsync(guildId);
+					var guild = await factory.GetGuildByIdOrDefaultAsync(guildId);
 
 					if (guild is null)
 					{
@@ -109,51 +113,59 @@ namespace Notifications.Services
 			}
 		}
 
-		public override async Task<YoutubeServiceResponse> Subscribe(SubscriptionRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> Subscribe(SubscriptionRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.SubscribeAsync(request.ChannelUrl, request.GuildId);
 
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<YoutubeServiceResponse> Unsubscribe(SubscriptionRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> Unsubscribe(SubscriptionRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UnsubscribeAsync(request.ChannelUrl, request.GuildId);
 
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<YoutubeServiceResponse> SetDiscordUploadChannel(DiscordChannelRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> SetDiscordUploadChannel(DiscordChannelRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, request.ChannelId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<YoutubeServiceResponse> SetDiscordUploadMessage(DiscordMessageRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> SetDiscordUploadMessage(DiscordMessageRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, uploadMessage: request.Content);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<YoutubeServiceResponse> SetDiscordLiveChannel(DiscordChannelRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> SetDiscordLiveChannel(DiscordChannelRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, liveChannel: request.ChannelId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<YoutubeServiceResponse> SetDiscordLiveMessage(DiscordMessageRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> SetDiscordLiveMessage(DiscordMessageRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, liveMessage: request.Content);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<YoutubeServiceResponse> RemoveAllSubscriptions(RemoveAllRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<YoutubeServiceResponse> RemoveAllSubscriptions(RemoveAllRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UnsubscribeFromAllAsync(request.GuildId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
 
-		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext context)
+		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
+		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext _)
 		{
 			var subscriptions = await _subscriptionManager.GetAllSubscriptionsAsync(request.GuildId);
 
@@ -169,6 +181,7 @@ namespace Notifications.Services
 			return response;
 		}
 
+		[ExcludeFromCodeCoverage(Justification = "Unnecessary to test.")]
 		private static string GetChannelUrl(string youtubeChannelId)
 		{
 			return $"https://www.youtube.com/channel/{youtubeChannelId}";

@@ -24,6 +24,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\sources\Cdn\Cdn.csproj" />
         <ProjectReference Include="..\..\sources\Database\Database.csproj" />
+        <ProjectReference Include="..\..\sources\Notifications\Notifications.csproj" />
     </ItemGroup>
 
 
