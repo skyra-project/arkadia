@@ -5,6 +5,7 @@ using NUnit.Framework;
 namespace UnitTests.Notifications
 {
 	[TestFixture]
+	[Parallelizable]
 	public class RequestCacheTests
 	{
 		[Test]
