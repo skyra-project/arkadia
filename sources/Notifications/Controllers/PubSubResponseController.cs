@@ -10,6 +10,7 @@ using System.Xml.Linq;
 using Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Notifications.Clients;
 using Notifications.Managers;
 using Notifications.Models;
 
@@ -42,7 +43,7 @@ namespace Notifications.Controllers
 			var (topic, mode, challenge, channelId, isSubscription) = StringValues();
 
 			_logger.LogInformation("Received Authentication request with challenge {Challenge} for topic {Topic} ({Mode})",
-				challenge, channelId, mode);
+				challenge, topic, mode);
 
 			if (!_cache.GetRequest(channelId, isSubscription))
 			{
@@ -73,11 +74,12 @@ namespace Notifications.Controllers
 			using var database = new ArkadiaDbContext();
 			var elements = await GetElementsAsync();
 
-			var entryElement = elements.FirstOrDefault(element => element.Name.LocalName == "entry");
+			var xElements = elements.ToArray();
+			var entryElement = xElements.FirstOrDefault(element => element.Name.LocalName == "entry");
 
 			if (entryElement is null) // it's a delete, they have no 'entry' element, ignore
 			{
-				var atby = elements
+				var atby = xElements
 					.First(element => element.Name.LocalName == "deleted-entry")
 					.Elements()
 					.First(element => element.Name.LocalName == "by");
@@ -171,9 +173,15 @@ namespace Notifications.Controllers
 			return Ok();
 		}
 
-		private static string GetChannelName(XElement entry)
+		private static string? GetChannelName(XElement entry)
 		{
-			var channelName = entry.Elements().First(element => element.Name.LocalName == "author").Elements().First(element => element.Name.LocalName == "name").Value;
+			var channelName = entry
+				.Elements()
+				.FirstOrDefault(element => element.Name.LocalName == "author")?
+				.Elements()
+				.FirstOrDefault(element => element.Name.LocalName == "name")?
+				.Value;
+
 			return channelName;
 		}
 

@@ -19,6 +19,42 @@ namespace Database.Migrations
                 .HasAnnotation("ProductVersion", "5.0.8")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+            modelBuilder.Entity("Database.Models.Entities.CdnEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("content_type");
+
+                    b.Property<string>("ETag")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("e_tag");
+
+                    b.Property<DateTime>("LastModifiedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_modified_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cdn_entry");
+
+                    b.ToTable("cdn-entry");
+                });
+
             modelBuilder.Entity("Database.Models.Entities.Guild", b =>
                 {
                     b.Property<string>("Id")

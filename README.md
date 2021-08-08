@@ -7,6 +7,7 @@
 **C# Microservices for [Skyra]**
 
 [![GitHub](https://img.shields.io/github/license/skyra-project/arkadia)](https://github.com/skyra-project/arkadia/blob/main/LICENSE.md)
+[![codecov](https://codecov.io/gh/skyra-project/arkadia/branch/main/graph/badge.svg?token=QEmhhyzHW5)](https://codecov.io/gh/skyra-project/arkadia)
 
 [![Support Server](https://discord.com/api/guilds/254360814063058944/embed.png?style=banner2)][support server]
 
@@ -24,6 +25,11 @@
             -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links)
             -   [What is arkadia.notifications](#what-is-arkadianotifications)
             -   [Environment Variables](#environment-variables)
+        -   [arkadia.cdn](#arkadiacdn)
+            -   [Quick reference](#quick-reference-1)
+            -   [Supported tags and respective `Dockerfile` links](#supported-tags-and-respective-dockerfile-links-1)
+            -   [What is arkadia.notifications](#what-is-arkadiacdn)
+            -   [Environment Variables](#environment-variables-1)
     -   [Buy us some doughnuts](#buy-us-some-doughnuts)
 
 ## Description
@@ -51,7 +57,8 @@ Arkadia is the aptly named arcade of micro services that are being used for [Sky
 
 #### What is [`arkadia.notifications`]
 
-Some description here
+Arkadia.Notifications is a microservice based around Google's PubSubHubBub API for Youtube. Interacted with via gRPC, it sends requests to the hub asking for notifications to be recieved over a HTTP connection.
+The hub then sends an authentication request, to ensure we wanted to subscribe or unsubscribe, and it pumps upload notifications in. See the README in the root folder for more information.
 
 #### Environment Variables
 
@@ -74,28 +81,85 @@ Some description here
 
 -   `RESUB_TIMER_INTERVAL`  
     The amount of seconds we should wait between checking for resubscriptions  
-    _default:_ `FILL ME IN PLS TYLER`
+    _default:_ `60`
 -   `PUBSUB_URL`  
-    The url for the pubsubhubbub api  
-    _default:_ `FILL ME IN PLS TYLER`
+    The url for the PubSubHubBub API  
+    _default:_ `https://pubsubhubbub.appspot.com/`
 -   `POSTGRES_USER`  
-    The user for the postgres database  
-    _default:_ `FILL ME IN PLS TYLER`
+    The user for the Postgres database  
+    _default:_ `postgres`
 -   `POSTGRES_PASSWORD`  
     The password for the database  
-    _default:_ `FILL ME IN PLS TYLER`
+    _default:_ `postgres`
 -   `POSTGRES_HOST`  
-    The host string  
-    _default:_ `FILL ME IN PLS TYLER`
+    The host url 
+    _default:_ `localhost`
 -   `POSTGRES_PORT`  
-    The port to connect to postgres to  
-    _default:_ `FILL ME IN PLS TYLER`
+    The port used to connect to Postgres  
+    _default:_ `5432`
 -   `POSTGRES_DB`  
-    The database to use in postgres  
-    _default:_ `FILL ME IN PLS TYLER`
+    The database to use in Postgres  
+    _default:_ `arkadia`
 -   `SENTRY_URL`  
-    The DSN url for sentry  
-    _default:_ `FILL ME IN PLS TYLER`
+    The DSN url for Sentry (leave empty for no Sentry reporting)  
+    _default:_ `''`
+	
+
+### [`arkadia.cdn`]
+
+#### Quick reference
+
+-   **Maintained by**:  
+    [Skyra Project](https://github.com/skyra-project)
+
+-   **Where to get help**:  
+    [the Skyra Lounge server](https://join.skyra.pw)
+
+-   **Where to file issues**:  
+    [https://github.com/skyra-project/arkadia/issues](https://github.com/skyra-project/arkadia/issues)
+
+#### Supported tags and respective `Dockerfile` links
+
+-   [`latest`](https://github.com/skyra-project/arkadia/blob/main/Cdn.Dockerfile)
+
+#### What is [`arkadia.cdn`]
+
+Arkadia.Cdn is a CDN that conforms to the RFC 7232 spec, internally interacted with via gRPC.
+
+#### Environment Variables
+
+**Required Environment Variables**
+
+-   `HTTP_PORT`  
+     The port for the http server to run on.  
+     _For Example:_ `9009`
+-   `GRPC_PORT`  
+     The port for the grpc server to run on.  
+     _For example:_ `9010`
+-   `BASE_ASSET_LOCATION`  
+     The location for assets to be stored at. Must exist before app start.  
+     _For Example:_ `/assets`
+
+**Optional Environment Variables**
+
+-   `POSTGRES_USER`  
+    The user for the Postgres database  
+    _default:_ `postgres`
+-   `POSTGRES_PASSWORD`  
+    The password for the database  
+    _default:_ `postgres`
+-   `POSTGRES_HOST`  
+    The host url 
+    _default:_ `localhost`
+-   `POSTGRES_PORT`  
+    The port used to connect to Postgres  
+    _default:_ `5432`
+-   `POSTGRES_DB`  
+    The database to use in Postgres  
+    _default:_ `arkadia`
+-   `SENTRY_URL`  
+    The DSN url for Sentry (leave empty for no Sentry reporting)  
+    _default:_ `''`
 
 ---
 
@@ -129,3 +193,4 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 [dotnet]: https://dotnet.microsoft.com
 [grpc]: https://grpc.io
 [`arkadia.notifications`]: https://github.com/skyra-project/docker-images/pkgs/container/arkadia.notifications
+[`arkadia.cdn`]: https://github.com/skyra-project/docker-images/pkgs/container/arkadia.cdn

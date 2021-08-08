@@ -11,15 +11,17 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.8"/>
-        <PackageReference Include="NUnit" Version="3.13.2"/>
-        <PackageReference Include="NUnit3TestAdapter" Version="4.0.0"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0"/>
-        <PackageReference Include="NSubstitute" Version="4.2.2"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.8" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.8" />
+        <PackageReference Include="NUnit" Version="3.13.2" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
+        <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="13.2.43" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\sources\Database\Database.csproj"/>
+        <ProjectReference Include="..\..\sources\Cdn\Cdn.csproj" />
+        <ProjectReference Include="..\..\sources\Database\Database.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -64,6 +65,7 @@ namespace Notifications.Clients
 			return options;
 		}
 
+		[ExcludeFromCodeCoverage]
 		public class PubSubHubBubError : IResultError
 		{
 			public string Message => "";
