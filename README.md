@@ -7,7 +7,7 @@
 **C# Microservices for [Skyra]**
 
 [![GitHub](https://img.shields.io/github/license/skyra-project/arkadia)](https://github.com/skyra-project/arkadia/blob/main/LICENSE.md)
-[![codecov](https://codecov.io/gh/skyra-project/arkadia/branch/main/graph/badge.svg?token=DYhRX6ailX)](https://codecov.io/gh/skyra-project/arkadia)
+[![codecov](https://codecov.io/gh/skyra-project/arkadia/branch/main/graph/badge.svg?token=QEmhhyzHW5)](https://codecov.io/gh/skyra-project/arkadia)
 
 [![Support Server](https://discord.com/api/guilds/254360814063058944/embed.png?style=banner2)][support server]
 
