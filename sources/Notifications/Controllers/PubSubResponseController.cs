@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,7 @@ namespace Notifications.Controllers
 		private readonly DateTime _startupTime = DateTime.Now;
 		private readonly SubscriptionManager _subscriptionManager;
 
+		[ExcludeFromCodeCoverage(Justification = "Constructor that fills fields.")]
 		public PubSubResponseController(ILogger<PubSubResponseController> logger, RequestCache cache, ConcurrentQueue<Notification> notificationQueue,
 			SubscriptionManager subscriptionManager, YoutubeApiClient apiClient)
 		{
