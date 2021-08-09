@@ -24,7 +24,7 @@ namespace UnitTests.Notifications
 
 			// assert
 			
-			Assert.IsFalse(response);
+			Assert.That(response, Is.False);
 
 		}
 		
@@ -45,7 +45,7 @@ namespace UnitTests.Notifications
 
 			// assert
 			
-			Assert.IsFalse(response);
+			Assert.That(response, Is.False);
 
 		}
 		
@@ -66,7 +66,7 @@ namespace UnitTests.Notifications
 
 			// assert
 			
-			Assert.IsTrue(response);
+			Assert.That(response, Is.True);
 		}
 	}
 }

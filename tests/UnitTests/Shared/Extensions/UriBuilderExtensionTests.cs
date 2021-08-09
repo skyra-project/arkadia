@@ -27,7 +27,7 @@ namespace UnitTests.Shared.Extensions
 
 			// assert
 
-			Assert.AreEqual(expected, fullUrl);
+			Assert.That(fullUrl, Is.EqualTo(expected));
 		}
 
 		[Test]
@@ -58,7 +58,7 @@ namespace UnitTests.Shared.Extensions
 
 			// assert
 
-			Assert.AreEqual(expected, fullUrl);
+			Assert.That(fullUrl, Is.EqualTo(expected));
 		}
 	}
 }
