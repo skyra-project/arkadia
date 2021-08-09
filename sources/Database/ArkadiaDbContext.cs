@@ -24,6 +24,22 @@ namespace Database
 		public DbSet<Guild> Guilds { get; set; }
 		public DbSet<YoutubeSubscription> YoutubeSubscriptions { get; set; }
 
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			modelBuilder.Entity<CdnEntry>()
+				.Property(entry => entry.LastModifiedAt)
+				.HasConversion(
+					date => date.Ticks,
+					ticks => new DateTime(ticks)
+				);
+			modelBuilder.Entity<YoutubeSubscription>()
+				.Property(entry => entry.ExpiresAt)
+				.HasConversion(
+					date => date.Ticks,
+					ticks => new DateTime(ticks)
+				);
+		}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			if (optionsBuilder.IsConfigured)

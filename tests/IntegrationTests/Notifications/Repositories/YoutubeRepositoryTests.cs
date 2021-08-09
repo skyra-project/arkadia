@@ -289,19 +289,9 @@ namespace IntegrationTests.Notifications.Repositories
 				if (x is null || y is null) return false;
 				return x.Id == y.Id
 						&& x.ChannelTitle == y.ChannelTitle
-						&& DateTimesEqual(x.ExpiresAt, y.ExpiresAt)
+						&& x.ExpiresAt.Equals(y.ExpiresAt)
 						&& x.GuildIds.SequenceEqual(y.GuildIds)
 						&& x.AlreadySeenIds.SequenceEqual(y.AlreadySeenIds);
-
-				bool DateTimesEqual(DateTime x, DateTime y)
-				{
-					return x.Year == y.Year &&
-							x.Month == y.Month &&
-							x.Day == y.Day &&
-							x.Hour == y.Hour &&
-							x.Minute == y.Minute &&
-							x.Second == y.Second;
-				}
 			}
 
 			public int GetHashCode(YoutubeSubscription obj)
