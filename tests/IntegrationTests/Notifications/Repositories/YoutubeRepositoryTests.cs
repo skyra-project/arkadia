@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Database;
 using Database.Models.Entities;
@@ -17,6 +19,11 @@ namespace IntegrationTests.Notifications.Repositories
 			await using var context = new ArkadiaDbContext();
 
 			foreach (var entry in context.YoutubeSubscriptions)
+			{
+				context.Remove(entry);
+			}
+			
+			foreach (var entry in context.Guilds)
 			{
 				context.Remove(entry);
 			}
@@ -48,28 +55,28 @@ namespace IntegrationTests.Notifications.Repositories
 			// arrange
 
 			var repository = new YoutubeRepository();
-
-
+			
 			await using var context = new ArkadiaDbContext();
 
 			const string id = "test1";
 			const string channelTitle = "coolTitle";
-			// NOTE: do not remove .Date - for some reason, something strange is happening without it.
-			// the date given BACK from postgres is a few milliseconds off (?)
-			var expiresAt = DateTime.Now.Date; 
+			var expiresAt = DateTime.Now;
 			var guildIds = new[] { "id1", "id2" };
 			var alreadySeenIds = new[] { "id1", "id2" };
-
-			// act
 			
-			await context.YoutubeSubscriptions.AddAsync(new YoutubeSubscription
+			var expected = new YoutubeSubscription
 			{
 				Id = id,
 				ChannelTitle = channelTitle,
 				ExpiresAt = expiresAt,
 				GuildIds = guildIds,
 				AlreadySeenIds = alreadySeenIds
-			});
+			};
+
+			// act
+
+			var entity = GetDefaultSubscription(id, channelTitle, expiresAt, guildIds, alreadySeenIds);
+			await context.YoutubeSubscriptions.AddAsync(entity);
 
 			await context.SaveChangesAsync();
 
@@ -78,11 +85,131 @@ namespace IntegrationTests.Notifications.Repositories
 			// assert
 
 			Assert.That(response, Is.Not.Null);
-			Assert.That(response!.Id, Is.EqualTo(id));
-			Assert.That(response.ChannelTitle, Is.EqualTo(channelTitle));
-			Assert.That(response.ExpiresAt, Is.EqualTo(expiresAt));
-			Assert.That(response.GuildIds, Is.EqualTo(guildIds));
-			Assert.That(response.AlreadySeenIds, Is.EqualTo(alreadySeenIds));
+			Assert.That(response, Is.EqualTo(expected).Using(new YoutubeSubscriptionComparer()));
+		}
+
+		[Test]
+		public async Task YoutubeRepository_ModifyExpiryDateAsync_ModifiesCorrectly()
+		{
+			// arrange
+
+			var repository = new YoutubeRepository();
+
+			await using var context = new ArkadiaDbContext();
+
+			const string id = "test1";
+			const string channelTitle = "coolTitle";
+			var expiresAt = DateTime.UtcNow; 
+			var guildIds = new[] { "id1", "id2" };
+			var alreadySeenIds = new[] { "id1", "id2" };
+
+			var newExpiresAt = DateTime.UtcNow.AddDays(1);
+
+			// act
+
+			var entity = GetDefaultSubscription(id, channelTitle, expiresAt, guildIds, alreadySeenIds);
+			await context.YoutubeSubscriptions.AddAsync(entity);
+
+			await context.SaveChangesAsync();
+
+			await repository.ModifyExpiryAsync(id, newExpiresAt);
+
+			var newEntity = await repository.GetSubscriptionByIdOrDefaultAsync(id);
+			
+			Assert.That(newEntity!.ExpiresAt, Is.EqualTo(newExpiresAt));
+		}
+
+		[Test]
+		public void YoutubeRepository_GetSubscriptions_ReturnsEmpty_WhenNoSubscriptionsExist()
+		{
+			
+			// arrange
+			
+			var repository = new YoutubeRepository();
+			
+			// act
+
+			var subscriptions = repository.GetSubscriptions();
+			
+			// assert
+			
+			Assert.That(subscriptions, Is.Empty);
+		}
+		
+		[Test]
+		public async Task YoutubeRepository_GetSubscriptions_ReturnsItems_WhenSubscriptionsExist()
+		{
+			
+			// arrange
+			
+			var repository = new YoutubeRepository();
+
+			using var context = new ArkadiaDbContext();
+
+			var items = new[]
+			{
+				new YoutubeSubscription
+				{
+					Id = "1",
+					ChannelTitle = "cooltitle",
+					ExpiresAt = DateTime.UtcNow.AddDays(10),
+					GuildIds = new[] { "guild1", "guild2" }
+				},
+				new YoutubeSubscription
+				{
+					Id = "2",
+					ChannelTitle = "coolertitle",
+					ExpiresAt = DateTime.UtcNow.AddDays(3),
+					GuildIds = Array.Empty<string>()
+				}
+			};
+			
+			// act
+
+			foreach (var sub in items)
+			{
+				await repository.AddSubscriptionAsync(sub.Id, sub.ExpiresAt, sub.GuildIds, sub.ChannelTitle);
+			}
+
+			var subscriptions = repository.GetSubscriptions().ToArray();
+
+			// assert
+			
+			Assert.That(subscriptions, Is.Not.Empty);
+			Assert.That(subscriptions, Is.EquivalentTo(items).Using(new YoutubeSubscriptionComparer()));
+		}
+
+		[Test]
+		public async Task YoutubeRepository_AddSubscription_AddsSubscriptionCorrectly()
+		{
+			
+			// arrange
+
+			await using var repo = new YoutubeRepository();
+
+			const string id = "test";
+			const string channelTitle = "deez";
+			var expiryTime = DateTime.UtcNow.AddMinutes(100);
+			var guildIds = new[] { "541738403230777351" };
+
+			var expected = new YoutubeSubscription
+			{
+				Id = id,
+				ChannelTitle = channelTitle,
+				ExpiresAt = expiryTime,
+				GuildIds = guildIds
+			};
+			
+			// act
+
+			await repo.AddSubscriptionAsync(id, expiryTime, guildIds, channelTitle);
+
+			var result = repo.GetSubscriptions().ToArray();
+			
+			// assert
+			
+			Assert.That(result, Has.Exactly(1).Items);
+			Assert.That(result.First(), Is.EqualTo(expected).Using(new YoutubeSubscriptionComparer()));
 		}
 		
 		[Test]
@@ -140,6 +267,63 @@ namespace IntegrationTests.Notifications.Repositories
 				YoutubeUploadLiveChannel = "test",
 				YoutubeUploadLiveMessage = "test"
 			};
+		}
+		
+		private YoutubeSubscription GetDefaultSubscription(string id, string channelTitle, DateTime expiresAt, string[] guildIds, string[] alreadySeenIds)
+		{
+			return new YoutubeSubscription
+			{
+				Id = id,
+				ChannelTitle = channelTitle,
+				ExpiresAt = expiresAt,
+				GuildIds = guildIds,
+				AlreadySeenIds = alreadySeenIds
+			};
+		}
+		
+		private class YoutubeSubscriptionComparer : IEqualityComparer<YoutubeSubscription>
+		{
+
+			public bool Equals(YoutubeSubscription? x, YoutubeSubscription? y)
+			{
+				if (x is null || y is null) return false;
+				return x.Id == y.Id
+						&& x.ChannelTitle == y.ChannelTitle
+						&& DateTimesEqual(x.ExpiresAt, y.ExpiresAt)
+						&& x.GuildIds.SequenceEqual(y.GuildIds)
+						&& x.AlreadySeenIds.SequenceEqual(y.AlreadySeenIds);
+
+				bool DateTimesEqual(DateTime x, DateTime y)
+				{
+					return x.Year == y.Year &&
+							x.Month == y.Month &&
+							x.Day == y.Day &&
+							x.Hour == y.Hour &&
+							x.Minute == y.Minute &&
+							x.Second == y.Second;
+				}
+			}
+
+			public int GetHashCode(YoutubeSubscription obj)
+			{
+				var hash = new HashCode();
+
+				foreach (var guildId in obj.GuildIds)
+				{
+					hash.Add(guildId);
+				}
+
+				foreach (var alreadySeenId in obj.AlreadySeenIds)
+				{
+					hash.Add(alreadySeenId);
+				}
+				
+				hash.Add(obj.Id);
+				hash.Add(obj.ChannelTitle);
+				hash.Add(obj.ExpiresAt);
+
+				return hash.ToHashCode();
+			}
 		}
 	}
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Cdn.Repositories;
 using Database.Models.Entities;
 
-namespace UnitTests.Cdn.Service
+namespace UnitTests.Cdn
 {
 	public class MockCdnRepository : ICdnRepository
 	{

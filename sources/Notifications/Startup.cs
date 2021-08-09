@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Notifications.Clients;
+using Notifications.Factories;
 using Notifications.Managers;
 using Notifications.Models;
 using Notifications.Services;
@@ -26,7 +27,7 @@ namespace Notifications
 			services.AddSingleton<SubscriptionManager>();
 			services.AddSingleton<RequestCache>();
 			services.AddSingleton<HttpClient>();
-			services.AddSingleton<ArkadiaDbContext>();
+			services.AddSingleton<IYoutubeRepositoryFactory, DefaultYoutubeRepositoryFactory>();
 			services.AddSingleton(BrowsingContext.New(Configuration.Default.WithDefaultLoader()));
 
 			services.AddGrpc();

@@ -1,7 +1,7 @@
 ﻿using Cdn.Factories;
 using Cdn.Repositories;
 
-namespace UnitTests.Cdn.Service
+namespace UnitTests.Cdn
 {
 	public class MockCdnRepositoryFactory : ICdnRepositoryFactory
 	{
@@ -12,6 +12,8 @@ namespace UnitTests.Cdn.Service
 		{
 			_instance = instance;
 		}
+		
+		public MockCdnRepositoryFactory() {}
 
 		public ICdnRepository GetRepository()
 		{

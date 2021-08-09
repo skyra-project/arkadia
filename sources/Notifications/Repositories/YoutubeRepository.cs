@@ -1,8 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Cdn.Repositories;
 using Database;
 using Database.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Notifications.Repositories
@@ -25,6 +28,36 @@ namespace Notifications.Repositories
 		public ValueTask<Guild?> GetGuildByIdOrDefaultAsync(string id)
 		{
 			return _context.Guilds.FindAsync(id);
+		}
+
+		public async Task ModifyExpiryAsync(string id, DateTime newTime)
+		{
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(id);
+			
+			// leave this nullability warning, it is expected for the caller to check if it exists first
+			// if not, we'd like to throw anyway.
+			subscription!.ExpiresAt = newTime;
+
+			await _context.SaveChangesAsync();
+
+		}
+
+		public IEnumerable<YoutubeSubscription> GetSubscriptions()
+		{
+			return _context.YoutubeSubscriptions;
+		}
+
+		public async Task AddSubscriptionAsync(string id, DateTime expiresAt, string[] guildIds, string channelTitle)
+		{
+			await _context.YoutubeSubscriptions.AddAsync(new YoutubeSubscription
+			{
+				Id = id,
+				ExpiresAt = expiresAt,
+				GuildIds = guildIds,
+				ChannelTitle = channelTitle
+			});
+
+			await _context.SaveChangesAsync();
 		}
 	}
 }

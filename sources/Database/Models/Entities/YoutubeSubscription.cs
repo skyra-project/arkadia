@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using NpgsqlTypes;
 
 namespace Database.Models.Entities
 {
@@ -16,7 +18,7 @@ namespace Database.Models.Entities
 		[Column("already_seen_ids", TypeName = "character varying(11)[]")]
 		public string[] AlreadySeenIds { get; set; } = Array.Empty<string>();
 
-		[Column("expires_at")]
+		[Column("expires_at", TypeName = "timestamp without time zone")]
 		public DateTime ExpiresAt { get; set; }
 
 		[Required]

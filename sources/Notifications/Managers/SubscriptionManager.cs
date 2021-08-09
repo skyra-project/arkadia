@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Notifications.Clients;
 using Notifications.Errors;
+using Notifications.Factories;
 using Remora.Results;
 
 namespace Notifications.Managers
@@ -21,25 +22,27 @@ namespace Notifications.Managers
 		private readonly IBrowsingContext _browsingContext;
 		private readonly ILogger<SubscriptionManager> _logger;
 		private readonly PubSubClient _pubSubClient;
-		private readonly Timer _resubTimer;
+		private readonly IYoutubeRepositoryFactory _repositoryFactory;
 
-		private Dictionary<string, DateTime> _resubscribeTimes = new Dictionary<string, DateTime>();
+		public Timer ResubTimer { get; }
+		public Dictionary<string, DateTime> ResubscribeTimes { get; private set; } = new Dictionary<string, DateTime>();
 
-		public SubscriptionManager(PubSubClient pubSubClient, ILogger<SubscriptionManager> logger, IBrowsingContext browsingContext)
+		public SubscriptionManager(PubSubClient pubSubClient, ILogger<SubscriptionManager> logger, IBrowsingContext browsingContext, IYoutubeRepositoryFactory repositoryFactory)
 		{
 			_pubSubClient = pubSubClient;
 			_logger = logger;
 			_browsingContext = browsingContext;
+			_repositoryFactory = repositoryFactory;
 
 			var timerInterval = int.Parse(Environment.GetEnvironmentVariable("RESUB_TIMER_INTERVAL") ?? "60");
 
-			_resubTimer = new Timer(1000 * timerInterval);
-			_resubTimer.Elapsed += ResubcriptionTimerOnElapsed;
+			ResubTimer = new Timer(1000 * timerInterval);
+			ResubTimer.Elapsed += ResubcriptionTimerOnElapsed;
 		}
 
 		private async void ResubcriptionTimerOnElapsed(object _, ElapsedEventArgs args)
 		{
-			var cloned = new Dictionary<string, DateTime>(_resubscribeTimes);
+			var cloned = new Dictionary<string, DateTime>(ResubscribeTimes);
 			foreach (var (channelId, value) in cloned)
 			{
 				if (DateTime.Now.AddMinutes(-10) >= value)
@@ -50,16 +53,16 @@ namespace Notifications.Managers
 					if (!result.IsSuccess)
 					{
 						_logger.LogInformation("No longer attempting to resubscribe to channel: {Channel}", channelId);
-						_resubscribeTimes.Remove(channelId);
+						ResubscribeTimes.Remove(channelId);
 						return;
 					}
 
 					var resubTime = DateTime.Now.AddDays(5);
-					_resubscribeTimes[channelId] = resubTime;
+					ResubscribeTimes[channelId] = resubTime;
 
-					using var database = new ArkadiaDbContext();
+					await using var repository = _repositoryFactory.GetRepository();
 
-					var subscription = await database.YoutubeSubscriptions.FindAsync(channelId);
+					var subscription = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
 
 					if (subscription is null)
 					{
@@ -67,21 +70,18 @@ namespace Notifications.Managers
 						return;
 					}
 
-					subscription.ExpiresAt = resubTime;
-					await database.SaveChangesAsync();
+					await repository.ModifyExpiryAsync(channelId, resubTime);
 				}
 			}
 		}
 
-		public Task StartAsync()
+		public async Task StartAsync()
 		{
-			using var database = new ArkadiaDbContext();
-			var currentSubscriptions = database.YoutubeSubscriptions;
-
-
-			_resubscribeTimes = currentSubscriptions.ToDictionary(sub => sub.Id, sub => sub.ExpiresAt);
-			_resubTimer.Start();
-			return Task.CompletedTask;
+			await using var repository = _repositoryFactory.GetRepository();
+			var currentSubscriptions = repository.GetSubscriptions();
+			
+			ResubscribeTimes = currentSubscriptions.ToDictionary(sub => sub.Id, sub => sub.ExpiresAt);
+			ResubTimer.Start();
 		}
 
 		public async Task<Result> UpdateSubscriptionSettingsAsync(string guildId, string? uploadChannel = null, string? uploadMessage = null, string? liveChannel = null,
@@ -205,7 +205,7 @@ namespace Notifications.Managers
 					GuildIds = new[] { guildId }
 				});
 
-				_resubscribeTimes[youtubeChannelId] = nowPlusFiveDays;
+				ResubscribeTimes[youtubeChannelId] = nowPlusFiveDays;
 			}
 
 			await database.SaveChangesAsync();
