@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -40,6 +41,7 @@ namespace Notifications.Managers
 			ResubTimer.Elapsed += ResubcriptionTimerOnElapsed;
 		}
 
+		[ExcludeFromCodeCoverage(Justification = "Timer based methods are very difficult to test.")]
 		private async void ResubcriptionTimerOnElapsed(object _, ElapsedEventArgs args)
 		{
 			var cloned = new Dictionary<string, DateTime>(ResubscribeTimes);
@@ -93,24 +95,9 @@ namespace Notifications.Managers
 				return Result.FromError(new AllParametersNullError());
 			}
 
-			using var database = new ArkadiaDbContext();
-			var guild = await database.Guilds.FindAsync(guildId);
+			var repo = _repositoryFactory.GetRepository();
 
-			if (guild is null)
-			{
-				var entry = await database.Guilds.AddAsync(new Guild
-				{
-					Id = guildId
-				});
-				guild = entry.Entity;
-			}
-
-			guild.YoutubeUploadNotificationChannel = uploadChannel ?? guild.YoutubeUploadNotificationChannel;
-			guild.YoutubeUploadNotificationMessage = uploadMessage ?? guild.YoutubeUploadNotificationMessage;
-			guild.YoutubeUploadLiveChannel = liveChannel ?? guild.YoutubeUploadLiveChannel;
-			guild.YoutubeUploadLiveMessage = liveMessage ?? guild.YoutubeUploadLiveMessage;
-
-			await database.SaveChangesAsync();
+			await repo.UpsertGuildAsync(guildId, uploadChannel, uploadMessage, liveChannel, liveMessage);
 
 			return Result.FromSuccess();
 		}

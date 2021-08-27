@@ -55,5 +55,26 @@ namespace UnitTests.Notifications
 			});
 			return Task.CompletedTask;
 		}
+
+		public ValueTask<Guild> UpsertGuildAsync(string id, string? uploadChannel, string? uploadMessage, string? liveChannel, string? liveMessage)
+		{
+			var guild = _guildEntries.FirstOrDefault(entry => entry.Id == id);
+
+			if (guild is null)
+			{
+				guild = new Guild
+				{
+					Id = id
+				};
+				_guildEntries.Add(guild);
+			}
+			
+			guild.YoutubeUploadNotificationChannel = uploadChannel ?? guild.YoutubeUploadNotificationChannel;
+			guild.YoutubeUploadNotificationMessage = uploadMessage ?? guild.YoutubeUploadNotificationMessage;
+			guild.YoutubeUploadLiveChannel = liveChannel ?? guild.YoutubeUploadLiveChannel;
+			guild.YoutubeUploadLiveMessage = liveMessage ?? guild.YoutubeUploadLiveMessage;
+
+			return ValueTask.FromResult(guild);
+		}
 	}
 }

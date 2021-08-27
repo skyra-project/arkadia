@@ -59,5 +59,30 @@ namespace Notifications.Repositories
 
 			await _context.SaveChangesAsync();
 		}
+
+		public async ValueTask<Guild> UpsertGuildAsync(string id, string? uploadChannel, string? uploadMessage, string? liveChannel, string? liveMessage)
+		{
+
+			var guild = await _context.Guilds.FindAsync(id);
+			
+			if (guild is null)
+			{
+				guild = new Guild
+				{
+					Id = id
+				};
+
+				await _context.Guilds.AddAsync(guild);
+			}
+
+			guild.YoutubeUploadNotificationChannel = uploadChannel ?? guild.YoutubeUploadNotificationChannel;
+			guild.YoutubeUploadNotificationMessage = uploadMessage ?? guild.YoutubeUploadNotificationMessage;
+			guild.YoutubeUploadLiveChannel = liveChannel ?? guild.YoutubeUploadLiveChannel;
+			guild.YoutubeUploadLiveMessage = liveMessage ?? guild.YoutubeUploadLiveMessage;
+
+			await _context.SaveChangesAsync();
+
+			return guild;
+		}
 	}
 }

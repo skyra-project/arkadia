@@ -12,5 +12,6 @@ namespace Notifications.Repositories
 		Task ModifyExpiryAsync(string id, DateTime newTime);
 		IEnumerable<YoutubeSubscription> GetSubscriptions();
 		Task AddSubscriptionAsync(string id, DateTime expiresAt, string[] guildIds, string channelTitle);
+		ValueTask<Guild> UpsertGuildAsync(string id, string? uploadChannel, string? uploadMessage, string? liveChannel, string? liveMessage);
 	}
 }

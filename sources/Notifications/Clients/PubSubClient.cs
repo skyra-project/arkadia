@@ -8,6 +8,7 @@ using Remora.Results;
 
 namespace Notifications.Clients
 {
+	[ExcludeFromCodeCoverage(Justification = "Not testing an external API.")]
 	public class PubSubClient
 	{
 		private readonly RequestCache _cache;

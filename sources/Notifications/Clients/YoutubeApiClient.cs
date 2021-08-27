@@ -10,6 +10,7 @@ using Shared.Extensions;
 
 namespace Notifications.Clients
 {
+	[ExcludeFromCodeCoverage(Justification = "Not testing an external API.")]
 	public class YoutubeApiClient
 	{
 		private const string ApiUrl = "https://youtube.googleapis.com/youtube/v3/videos";
