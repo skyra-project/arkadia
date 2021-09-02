@@ -7,6 +7,8 @@ using Database;
 using Database.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Notifications.Errors;
+using Remora.Results;
 
 namespace Notifications.Repositories
 {
@@ -47,13 +49,13 @@ namespace Notifications.Repositories
 			return _context.YoutubeSubscriptions;
 		}
 
-		public async Task AddSubscriptionAsync(string id, DateTime expiresAt, string[] guildIds, string channelTitle)
+		public async Task AddSubscriptionAsync(string id, DateTime expiresAt, string guildId, string channelTitle)
 		{
 			await _context.YoutubeSubscriptions.AddAsync(new YoutubeSubscription
 			{
 				Id = id,
 				ExpiresAt = expiresAt,
-				GuildIds = guildIds,
+				GuildIds = new []{ guildId },
 				ChannelTitle = channelTitle
 			});
 
@@ -83,6 +85,29 @@ namespace Notifications.Repositories
 			await _context.SaveChangesAsync();
 
 			return guild;
+		}
+
+		public async Task<Result> AddGuildToSubscriptionAsync(string youtubeChannelId, string guildId)
+		{
+			await using var context = new ArkadiaDbContext();
+
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+
+			if (subscription is null)
+			{
+				return Result.FromError(new MissingSubscriptionError());
+			}
+
+			var currentlySubscribedGuilds = subscription.GuildIds;
+			var newSubscribedGuilds = new string[currentlySubscribedGuilds.Length + 1];
+			currentlySubscribedGuilds.CopyTo(newSubscribedGuilds, 0);
+			newSubscribedGuilds[currentlySubscribedGuilds.Length] = guildId;
+
+			subscription.GuildIds = newSubscribedGuilds;
+
+			await _context.SaveChangesAsync();
+			
+			return Result.FromSuccess();
 		}
 	}
 }

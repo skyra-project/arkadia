@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="arkadia@localhost" uuid="766d2080-d45f-4cb3-a8f8-36e6df4fc3aa">
+    <data-source source="LOCAL" name="PostgreSQL - arkadia@localhost" uuid="0a6904a8-d5df-4f6b-ad4a-7d52268b0d29">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>

@@ -14,26 +14,29 @@ using Microsoft.Extensions.Logging;
 using Notifications.Clients;
 using Notifications.Errors;
 using Notifications.Factories;
+using Notifications.Repositories;
 using Remora.Results;
 
 namespace Notifications.Managers
 {
 	public class SubscriptionManager
 	{
-		private readonly IBrowsingContext _browsingContext;
 		private readonly ILogger<SubscriptionManager> _logger;
-		private readonly PubSubClient _pubSubClient;
+		private readonly IPubSubClient _pubSubClient;
 		private readonly IYoutubeRepositoryFactory _repositoryFactory;
+		private readonly IChannelInfoRepository _channelInfoRepository;
+		private readonly IDateTimeRepository _dateTimeRepository;
 
 		public Timer ResubTimer { get; }
 		public Dictionary<string, DateTime> ResubscribeTimes { get; private set; } = new Dictionary<string, DateTime>();
 
-		public SubscriptionManager(PubSubClient pubSubClient, ILogger<SubscriptionManager> logger, IBrowsingContext browsingContext, IYoutubeRepositoryFactory repositoryFactory)
+		public SubscriptionManager(IPubSubClient pubSubClient, ILogger<SubscriptionManager> logger, IYoutubeRepositoryFactory repositoryFactory, IChannelInfoRepository channelInfoRepository, IDateTimeRepository dateTimeRepository)
 		{
 			_pubSubClient = pubSubClient;
 			_logger = logger;
-			_browsingContext = browsingContext;
 			_repositoryFactory = repositoryFactory;
+			_channelInfoRepository = channelInfoRepository;
+			_dateTimeRepository = dateTimeRepository;
 
 			var timerInterval = int.Parse(Environment.GetEnvironmentVariable("RESUB_TIMER_INTERVAL") ?? "60");
 
@@ -104,21 +107,21 @@ namespace Notifications.Managers
 
 		public async Task<Result<bool>> IsSubscribedAsync(string guildId, string youtubeChannelUrl)
 		{
-			var (youtubeChannelId, _) = await GetChannelInfoAsync(youtubeChannelUrl);
+			var (youtubeChannelId, _) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
 
 			if (youtubeChannelId is null)
 			{
 				return Result<bool>.FromError(new ChannelInfoRetrievalError());
 			}
 
-			using var database = new ArkadiaDbContext();
+			var respository = _repositoryFactory.GetRepository();
 
-			var subscription = await GetSubscriptionAsync(youtubeChannelId);
+			var subscription = await respository.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
 			if (subscription is null)
 			{
 				_logger.LogError("Subscription with ID {Id} was not found when checking if guild {GuildId} was subscribed", youtubeChannelId, guildId);
-				return Result<bool>.FromError(new NullSubscriptionError());
+				return Result<bool>.FromSuccess(false);
 			}
 
 			var isSubscribed = subscription.GuildIds.Contains(guildId);
@@ -140,9 +143,9 @@ namespace Notifications.Managers
 				return Result.FromSuccess();
 			}
 
-			using var database = new ArkadiaDbContext();
+			var repo = _repositoryFactory.GetRepository();
 
-			var guild = await database.Guilds.FindAsync(guildId);
+			var guild = await repo.GetGuildByIdOrDefaultAsync(guildId);
 
 			// ReSharper disable once MergeSequentialChecks
 			if (guild is null || guild.YoutubeUploadLiveChannel is null || guild.YoutubeUploadLiveMessage is null
@@ -151,7 +154,7 @@ namespace Notifications.Managers
 				return Result.FromError(new UnconfiguredError());
 			}
 
-			var (youtubeChannelId, youtubeChannelTitle) = await GetChannelInfoAsync(youtubeChannelUrl);
+			var (youtubeChannelId, youtubeChannelTitle) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
 
 			if (youtubeChannelId is null || youtubeChannelTitle is null)
 			{
@@ -164,10 +167,9 @@ namespace Notifications.Managers
 			{
 				// we already have an active subscription, just need to add this guild to the sub
 
-				var currentlySubscribedGuilds = subscription.GuildIds;
-				var newSubscribedGuilds = new string[currentlySubscribedGuilds.Length + 1];
-				currentlySubscribedGuilds.CopyTo(newSubscribedGuilds, 0);
-				newSubscribedGuilds[currentlySubscribedGuilds.Length] = guildId;
+				// no need to check result here, as the above call to IsSubscribedAsync checks if the subscription exists,
+				// which is the only time this can fail anyway.
+				await repo.AddGuildToSubscriptionAsync(youtubeChannelId, guildId);
 
 				_logger.LogInformation("Added a subscription to {YoutubeChannelId} for {GuildId}", youtubeChannelId, guildId);
 			}
@@ -181,28 +183,19 @@ namespace Notifications.Managers
 					return Result.FromError(subscriptionResult.Error);
 				}
 
-				var nowPlusFiveDays = DateTime.Now.AddDays(5);
-
-				await database.YoutubeSubscriptions.AddAsync(new YoutubeSubscription
-				{
-					Id = youtubeChannelId,
-					AlreadySeenIds = Array.Empty<string>(),
-					ChannelTitle = youtubeChannelTitle,
-					ExpiresAt = nowPlusFiveDays,
-					GuildIds = new[] { guildId }
-				});
+				var nowPlusFiveDays = _dateTimeRepository.GetTime().AddDays(5);
+				
+				await repo.AddSubscriptionAsync(youtubeChannelId, nowPlusFiveDays, guildId, youtubeChannelTitle);
 
 				ResubscribeTimes[youtubeChannelId] = nowPlusFiveDays;
 			}
-
-			await database.SaveChangesAsync();
 
 			return Result.FromSuccess();
 		}
 
 		public async Task<Result> UnsubscribeAsync(string youtubeChannelUrl, string guildId)
 		{
-			var (youtubeChannelId, _) = await GetChannelInfoAsync(youtubeChannelUrl);
+			var (youtubeChannelId, _) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
 
 			if (youtubeChannelId is null)
 			{
@@ -267,11 +260,11 @@ namespace Notifications.Managers
 			return Result.FromSuccess();
 		}
 
-		public async Task<YoutubeSubscription?> GetSubscriptionAsync(string youtubeChannelId)
+		public ValueTask<YoutubeSubscription?> GetSubscriptionAsync(string youtubeChannelId)
 		{
-			using var database = new ArkadiaDbContext();
+			var repository = _repositoryFactory.GetRepository();
 
-			return await database.YoutubeSubscriptions.FindAsync(youtubeChannelId);
+			return repository.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 		}
 
 		public async Task AddSeenVideoAsync(string youtubeChannelId, string videoId)
@@ -322,34 +315,6 @@ namespace Notifications.Managers
 			using var database = new ArkadiaDbContext();
 
 			return await database.YoutubeSubscriptions.ToArrayAsync();
-		}
-
-		private async Task<(string?, string?)> GetChannelInfoAsync(string channelUrl)
-		{
-			var document = await _browsingContext.OpenAsync(channelUrl);
-			if (document.StatusCode != HttpStatusCode.OK)
-			{
-				_logger.LogError("Did not recieve OK response from youtube for channel url of {Url} - instead received {Status}", channelUrl, document.StatusCode);
-				return (null, null);
-			}
-
-			var cell = document.QuerySelector("meta[itemprop='channelId']") as IHtmlMetaElement;
-
-			if (cell is null)
-			{
-				_logger.LogError("Could not find <meta> tag for the channel-id for url {Url}", channelUrl);
-				return (null, null);
-			}
-
-			var name = document.QuerySelector("meta[property='og:title']").Attributes["content"].Value;
-
-			if (name is null)
-			{
-				_logger.LogError("Could not find 'og:title' tag for url {Url}", channelUrl);
-				return (null, null);
-			}
-
-			return (cell.Content, name);
 		}
 	}
 

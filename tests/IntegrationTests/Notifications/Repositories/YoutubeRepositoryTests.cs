@@ -146,21 +146,21 @@ namespace IntegrationTests.Notifications.Repositories
 
 			using var context = new ArkadiaDbContext();
 
-			var items = new[]
+			var items = new YoutubeSubscription[]
 			{
 				new YoutubeSubscription
 				{
 					Id = "1",
 					ChannelTitle = "cooltitle",
 					ExpiresAt = DateTime.UtcNow.AddDays(10),
-					GuildIds = new[] { "guild1", "guild2" }
+					GuildIds = new[] { "guild1" }
 				},
 				new YoutubeSubscription
 				{
 					Id = "2",
 					ChannelTitle = "coolertitle",
 					ExpiresAt = DateTime.UtcNow.AddDays(3),
-					GuildIds = Array.Empty<string>()
+					GuildIds = new[] { "guild1" }
 				}
 			};
 			
@@ -168,7 +168,7 @@ namespace IntegrationTests.Notifications.Repositories
 
 			foreach (var sub in items)
 			{
-				await repository.AddSubscriptionAsync(sub.Id, sub.ExpiresAt, sub.GuildIds, sub.ChannelTitle);
+				await repository.AddSubscriptionAsync(sub.Id, sub.ExpiresAt, sub.GuildIds[0], sub.ChannelTitle);
 			}
 
 			var subscriptions = repository.GetSubscriptions().ToArray();
@@ -190,19 +190,19 @@ namespace IntegrationTests.Notifications.Repositories
 			const string id = "test";
 			const string channelTitle = "deez";
 			var expiryTime = DateTime.UtcNow.AddMinutes(100);
-			var guildIds = new[] { "541738403230777351" };
+			var guildId = "541738403230777351";
 
 			var expected = new YoutubeSubscription
 			{
 				Id = id,
 				ChannelTitle = channelTitle,
 				ExpiresAt = expiryTime,
-				GuildIds = guildIds
+				GuildIds = new []{ guildId }
 			};
 			
 			// act
 
-			await repo.AddSubscriptionAsync(id, expiryTime, guildIds, channelTitle);
+			await repo.AddSubscriptionAsync(id, expiryTime, guildId, channelTitle);
 
 			var result = repo.GetSubscriptions().ToArray();
 			

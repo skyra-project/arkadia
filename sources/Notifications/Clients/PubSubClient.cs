@@ -4,12 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Notifications.Errors;
 using Remora.Results;
 
 namespace Notifications.Clients
 {
 	[ExcludeFromCodeCoverage(Justification = "Not testing an external API.")]
-	public class PubSubClient
+	public partial class PubSubClient : IPubSubClient
 	{
 		private readonly RequestCache _cache;
 		private readonly string _callbackUrl;
@@ -66,10 +67,5 @@ namespace Notifications.Clients
 			return options;
 		}
 
-		[ExcludeFromCodeCoverage]
-		public class PubSubHubBubError : IResultError
-		{
-			public string Message => "";
-		}
 	}
 }

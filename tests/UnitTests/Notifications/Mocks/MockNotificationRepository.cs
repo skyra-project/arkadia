@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Database.Models.Entities;
+using Notifications.Errors;
 using Notifications.Repositories;
+using Remora.Results;
 
-namespace UnitTests.Notifications
+namespace UnitTests.Notifications.Mocks
 {
 	public class MockNotificationRepository : IYoutubeRepository
 	{
@@ -44,6 +46,20 @@ namespace UnitTests.Notifications
 			return _youtubeEntries;
 		}
 
+		public Task AddSubscriptionAsync(string id, DateTime expiresAt, string guildId, string channelTitle)
+		{
+			_youtubeEntries.Add(new YoutubeSubscription
+			{
+				Id = id,
+				ExpiresAt = expiresAt,
+				GuildIds = new []{ guildId },
+				ChannelTitle = channelTitle,
+				AlreadySeenIds = Array.Empty<string>()
+			});
+			
+			return Task.CompletedTask;
+		}
+
 		public Task AddSubscriptionAsync(string id, DateTime expiresAt, string[] guildIds, string channelTitle)
 		{
 			_youtubeEntries.Add(new YoutubeSubscription
@@ -75,6 +91,25 @@ namespace UnitTests.Notifications
 			guild.YoutubeUploadLiveMessage = liveMessage ?? guild.YoutubeUploadLiveMessage;
 
 			return ValueTask.FromResult(guild);
+		}
+
+		public async Task<Result> AddGuildToSubscriptionAsync(string youtubeChannelId, string guildId)
+		{
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+			
+			if (subscription is null)
+			{
+				return Result.FromError(new MissingSubscriptionError());
+			}
+
+			var currentlySubscribedGuilds = subscription.GuildIds;
+			var newSubscribedGuilds = new string[currentlySubscribedGuilds.Length + 1];
+			currentlySubscribedGuilds.CopyTo(newSubscribedGuilds, 0);
+			newSubscribedGuilds[currentlySubscribedGuilds.Length] = guildId;
+
+			subscription.GuildIds = newSubscribedGuilds;
+			
+			return Result.FromSuccess();
 		}
 	}
 }

@@ -1,7 +1,7 @@
 ﻿using Notifications.Factories;
 using Notifications.Repositories;
 
-namespace UnitTests.Notifications
+namespace UnitTests.Notifications.Mocks
 {
 	public class MockNotificationRepositoryFactory : IYoutubeRepositoryFactory
 	{
