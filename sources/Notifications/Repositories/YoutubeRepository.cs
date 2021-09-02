@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using Cdn.Repositories;
 using Database;
@@ -109,5 +110,54 @@ namespace Notifications.Repositories
 			
 			return Result.FromSuccess();
 		}
+
+		public async Task<Result> RemoveGuildFromSubscriptionAsync(string youtubeChannelId, string guildId)
+		{
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+
+			if (subscription is null)
+			{
+				return Result.FromError(new NullSubscriptionError());
+			}
+
+			var containsGuild = subscription.GuildIds.Contains(guildId);
+
+			if (!containsGuild)
+			{
+				return Result.FromError(new MissingSubscriptionError());
+			}
+
+			subscription.GuildIds = subscription.GuildIds.Where(id => id != guildId).ToArray();
+			await _context.SaveChangesAsync();
+			
+			return Result.FromSuccess();
+		}
+
+		public async Task<Result> RemoveSubscriptionAsync(string youtubeChannelId)
+		{
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+
+			if (subscription is null)
+			{
+				return Result.FromError(new NullSubscriptionError());
+			}
+
+			_context.YoutubeSubscriptions.Remove(subscription);
+			await _context.SaveChangesAsync();
+			
+			return Result.FromSuccess();
+		}
+
+		public async Task<(bool, IEnumerable<YoutubeSubscription>)> TryGetSubscriptionsAsync(string guildId)
+		{
+			var subscriptions = _context.YoutubeSubscriptions;
+			
+			var guildSubscriptions = subscriptions.Where(subscription => subscription.GuildIds.Contains(guildId));
+
+			var exists = await subscriptions.AnyAsync();
+			
+			return (exists, subscriptions);
+		}
+
 	}
 }

@@ -32,6 +32,7 @@ namespace Notifications.Services
 		}
 
 		[DoesNotReturn]
+		[ExcludeFromCodeCoverage(Justification = "Infinite loop.")]
 		public override async Task NotificationStream(Empty request, IServerStreamWriter<UploadNotification> responseStream, ServerCallContext _)
 		{
 			while (true)

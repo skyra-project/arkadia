@@ -16,10 +16,11 @@ using UnitTests.Notifications.Mocks;
 namespace UnitTests.Notifications.Managers
 {
 	[TestFixture]
+	[Parallelizable]
 	public class SubscriptionManagerTests
 	{
 		[Test]
-		public async Task SubscriptionManager_StartAsync_SetsUpManagerCorrectly()
+		public async Task SubscriptionManager_Start_SetsUpManagerCorrectly()
 		{
 			
 			// arrange
@@ -439,7 +440,7 @@ namespace UnitTests.Notifications.Managers
 			const string guildId = "1";
 			const string channelTitle = "generalKenobi";
 
-			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle, 1);
+			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
 			
@@ -452,6 +453,9 @@ namespace UnitTests.Notifications.Managers
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", "1", "test");
+			
+			channelInfoRepo.FailNext();
+
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
@@ -526,7 +530,7 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<PubSubHubBubError>());
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_UpdatesDataCorrectly()
 		{
@@ -574,6 +578,299 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(manager.ResubscribeTimes, Does.ContainKey(youtubeChannelId).WithValue(fiveDays));
 			Assert.That(notificationRepo.GetSubscriptions(), Has.Exactly(1).EqualTo(expected).Using(new YoutubeSubscriptionComparer()));
 		}
+
+		[Test]
+		public async Task SubscriptionManager_Unsubscribe_ReturnsChannelInfoRetrievalErrorWhenChannelInfoFails()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string guildId = "1";
+
+			var channelInfoRepo = new MockNullReturningChannelInfoRepository();
+
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				null!,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, guildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
+			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
+		}
+
+		[Test]
+		public async Task SubscriptionManager_Unsubscribe_DoesNotRemoveSubscription_WhenMultipleGuildsAreSubscribed()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string firstGuildId = "1";
+			const string secondGuildId = "2";
+			const string channelName = "Captain Smeghead";
+
+			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelName);
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+			
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			await mockRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.UtcNow.AddDays(5), new[] { firstGuildId, secondGuildId }, channelName);
+			
+			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, firstGuildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
+			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(1).With.Property("GuildIds").Contains(secondGuildId));
+			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(1).With.Property("GuildIds").Not.Contains(firstGuildId));
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_Unsubscribe_RemovesSubscription_WhenOnlyOneGuildIsSubscribed()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string firstGuildId = "1";
+			const string channelName = "Captain Smeghead";
+
+			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelName);
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+			var mockPubSubClient = new MockPubSubClient();
+			
+			var manager = new SubscriptionManager(mockPubSubClient,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			await mockRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.UtcNow.AddDays(5), firstGuildId, channelName);
+			
+			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, firstGuildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
+			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(0).Items);
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_Unsubscribe_ReturnsMissingSubscriptionError_WhenGuildIsNotSubscribed()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string firstGuildId = "1";
+			const string secondGuildId = "2";
+			const string thirdGuildId = "3";
+			const string channelName = "Captain Smeghead";
+
+			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelName);
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			await mockRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.UtcNow.AddDays(5), new[] { firstGuildId, secondGuildId }, channelName);
+			
+			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, thirdGuildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
+			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<MissingSubscriptionError>());
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_Unsubscribe_ReturnsNullSubscriptionError_WhenSubscriptionDoesNotExist()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string guildId = "1";
+			const string channelName = "Captain Smeghead";
+
+			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelName);
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, guildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
+			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<NullSubscriptionError>());
+		}
+
+		[Test]
+		public async Task SubscriptionManager_UnsubscribeFromAll_ReturnsSuccess_IfGuildIsNotSubscribed()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string guildId = "1";
+			const string channelName = "Captain Smeghead";
+
+			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelName);
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_UnsubscribeFromAll_ReturnsChannelInfoRetrievalError_WhenChannelInfoFetchingFails()
+		{
+			// arrange
+
+			const string youtubeChannelId = "123";
+			const string guildId = "1";
+			const string channelName = "Captain Smeghead";
+
+			var channelInfoRepo = new MockNullReturningChannelInfoRepository();
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, guildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
+			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
+		}
+	
+		[Test]
+		public async Task SubscriptionManager_UnsubscribeFromAll_RemovesSubscriptions()
+		{
+			// arrange
+			
+			const string guildId = "1";
+
+			var channelIds = new[] { "1", "2", "3", "1" };
+			var channelNames = new[] { "smeg", "head", "cadet", "rimmer" };
+
+			var channelInfoRepo = new MockFakeChannelInfoRepository(channelIds,  channelNames, true);
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+			var mockPubSubClient = new MockPubSubClient();
+
+			var manager = new SubscriptionManager(mockPubSubClient,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			for (var i = 0; i < 3; i++)
+			{
+				await mockRepo.AddSubscriptionAsync(channelIds[i], DateTime.Now, "1", channelNames[i]);
+			}
+
+			channelInfoRepo.SetChannelIds(new[] { channelIds[0] });
+			channelInfoRepo.SetChannelNames(new[] { channelNames[0] });
+			
+			await mockRepo.AddSubscriptionAsync(channelIds[0], DateTime.Now, "2", channelIds[0]);
+
+			
+			channelInfoRepo.SetChannelIds(channelIds);
+			channelInfoRepo.SetChannelNames(channelNames);
+			
+			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
+			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(1).With.Property("GuildIds").Contains("2"));
+			Assert.That(mockRepo.GetSubscriptions(), Has.None.With.Property("GuildIds").Contains("1"));
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_UnsubscribeFromAll_ReturnsChannelInfoRetrievalError_WhenChannelInfoFetchFails()
+		{
+			// arrange
+			
+			const string guildId = "1";
+
+			var channelIds = new[] { "1", "2", "3"};
+			var channelNames = new[] { "smeg", "head", "cadet"};
+
+			var channelInfoRepo = new MockNullReturningChannelInfoRepository();
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+			var mockPubSubClient = new MockPubSubClient();
+
+			var manager = new SubscriptionManager(null!,
+				new NullLogger<SubscriptionManager>(),
+				mockRepoFactory,
+				channelInfoRepo,
+				null!);
+			
+			// act
+
+			for (var i = 0; i < 3; i++)
+			{
+				await mockRepo.AddSubscriptionAsync(channelIds[i], DateTime.Now, "1", channelNames[i]);
+			}
+
+			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
+			
+			// assert
+			
+			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
+			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
+		}
+		
 	}
 
 	internal class YoutubeSubscriptionComparer : IEqualityComparer<YoutubeSubscription>

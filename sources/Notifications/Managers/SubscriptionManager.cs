@@ -80,6 +80,7 @@ namespace Notifications.Managers
 			}
 		}
 
+		[ExcludeFromCodeCoverage(Justification = "Too simple to require a test.")]
 		public async Task StartAsync()
 		{
 			await using var repository = _repositoryFactory.GetRepository();
@@ -155,13 +156,9 @@ namespace Notifications.Managers
 			}
 
 			var (youtubeChannelId, youtubeChannelTitle) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
+			
 
-			if (youtubeChannelId is null || youtubeChannelTitle is null)
-			{
-				return Result.FromError(new ChannelInfoRetrievalError());
-			}
-
-			var subscription = await GetSubscriptionAsync(youtubeChannelId);
+			var subscription = await GetSubscriptionAsync(youtubeChannelId!);
 
 			if (subscription is not null)
 			{
@@ -169,14 +166,14 @@ namespace Notifications.Managers
 
 				// no need to check result here, as the above call to IsSubscribedAsync checks if the subscription exists,
 				// which is the only time this can fail anyway.
-				await repo.AddGuildToSubscriptionAsync(youtubeChannelId, guildId);
+				await repo.AddGuildToSubscriptionAsync(youtubeChannelId!, guildId);
 
 				_logger.LogInformation("Added a subscription to {YoutubeChannelId} for {GuildId}", youtubeChannelId, guildId);
 			}
 			else
 			{
 				// we don't have any subscriptions, so let's make a new one
-				var subscriptionResult = await _pubSubClient.SubscribeAsync(youtubeChannelId);
+				var subscriptionResult = await _pubSubClient.SubscribeAsync(youtubeChannelId!);
 
 				if (!subscriptionResult.IsSuccess)
 				{
@@ -185,9 +182,9 @@ namespace Notifications.Managers
 
 				var nowPlusFiveDays = _dateTimeRepository.GetTime().AddDays(5);
 				
-				await repo.AddSubscriptionAsync(youtubeChannelId, nowPlusFiveDays, guildId, youtubeChannelTitle);
+				await repo.AddSubscriptionAsync(youtubeChannelId!, nowPlusFiveDays, guildId, youtubeChannelTitle!);
 
-				ResubscribeTimes[youtubeChannelId] = nowPlusFiveDays;
+				ResubscribeTimes[youtubeChannelId!] = nowPlusFiveDays;
 			}
 
 			return Result.FromSuccess();
@@ -207,7 +204,7 @@ namespace Notifications.Managers
 
 		private async Task<Result> RemoveSubscriptionAsync(string guildId, string youtubeChannelId)
 		{
-			using var database = new ArkadiaDbContext();
+			var repo = _repositoryFactory.GetRepository();
 
 			var subscription = await GetSubscriptionAsync(youtubeChannelId);
 
@@ -217,22 +214,29 @@ namespace Notifications.Managers
 
 				if (subscription.GuildIds.Length > 1)
 				{
-					subscription.GuildIds = subscription.GuildIds.Where(id => id != guildId).ToArray();
+					var result = await repo.RemoveGuildFromSubscriptionAsync(youtubeChannelId, guildId);
+
+					if (!result.IsSuccess)
+					{
+						return Result.FromError(result.Error);
+					}
+					
 					_logger.LogInformation("removed a subscription to {ChannelId} for {GuildId}", youtubeChannelId, guildId);
 				}
 				else
 				{
-					database.YoutubeSubscriptions.Remove(subscription);
+					// no need to check result here, as the only error that can occur is the subscription being null,
+					// which is already handled by the GetSubscriptionAsync() call above.
+					await repo.RemoveSubscriptionAsync(youtubeChannelId);
+
 					await _pubSubClient.UnsubscribeAsync(youtubeChannelId);
 					_logger.LogInformation("Removing subscription to channel {ChannelId} entirely as no guild are subscribed to it currently", youtubeChannelId);
 				}
-
-				await database.SaveChangesAsync();
 			}
 			else
 			{
 				_logger.LogWarning("Subscription with id {Id} does not exist, yet an attempt was made to unsubscribe from it", youtubeChannelId);
-				return Result.FromSuccess();
+				return Result.FromError(new NullSubscriptionError());
 			}
 
 			return Result.FromSuccess();
@@ -240,11 +244,9 @@ namespace Notifications.Managers
 
 		public async Task<Result> UnsubscribeFromAllAsync(string guildId)
 		{
-			using var database = new ArkadiaDbContext();
+			var repo = _repositoryFactory.GetRepository();
 
-			var subscriptions = database.YoutubeSubscriptions.Where(subscription => subscription.GuildIds.Contains(guildId));
-
-			var exists = await subscriptions.AnyAsync();
+			var (exists, subscriptions) = await repo.TryGetSubscriptionsAsync(guildId);
 
 			if (!exists)
 			{
@@ -252,9 +254,15 @@ namespace Notifications.Managers
 				return Result.FromSuccess();
 			}
 
-			foreach (var subscription in subscriptions)
+			// important: do not remove .ToArray() - collection gets modified during iteration.
+			foreach (var subscription in subscriptions.ToArray())
 			{
-				await UnsubscribeAsync(guildId, subscription.Id);
+				var unsubscribeResult = await UnsubscribeAsync(guildId, subscription.Id);
+				
+				if (!unsubscribeResult.IsSuccess)
+				{
+					return Result.FromError(unsubscribeResult.Error);	
+				}
 			}
 
 			return Result.FromSuccess();

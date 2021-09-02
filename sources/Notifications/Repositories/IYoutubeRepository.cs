@@ -15,5 +15,8 @@ namespace Notifications.Repositories
 		Task AddSubscriptionAsync(string id, DateTime expiresAt, string guildId, string channelTitle);
 		ValueTask<Guild> UpsertGuildAsync(string id, string? uploadChannel, string? uploadMessage, string? liveChannel, string? liveMessage);
 		Task<Result> AddGuildToSubscriptionAsync(string youtubeChannelId, string guildId);
+		Task<Result> RemoveGuildFromSubscriptionAsync(string youtubeChannelId, string guildId);
+		Task<Result> RemoveSubscriptionAsync(string youtubeChannelId);
+		Task<(bool, IEnumerable<YoutubeSubscription>)> TryGetSubscriptionsAsync(string guildId);
 	}
 }

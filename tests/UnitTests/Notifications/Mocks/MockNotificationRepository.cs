@@ -111,5 +111,47 @@ namespace UnitTests.Notifications.Mocks
 			
 			return Result.FromSuccess();
 		}
+		
+		public async Task<Result> RemoveGuildFromSubscriptionAsync(string youtubeChannelId, string guildId)
+		{
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+
+			if (subscription is null)
+			{
+				return Result.FromError(new NullSubscriptionError());
+			}
+
+			var containsGuild = subscription.GuildIds.Contains(guildId);
+
+			if (!containsGuild)
+			{
+				return Result.FromError(new MissingSubscriptionError());
+			}
+
+			subscription.GuildIds = subscription.GuildIds.Where(id => id != guildId).ToArray();
+
+			return Result.FromSuccess();
+		}
+
+		public async Task<Result> RemoveSubscriptionAsync(string youtubeChannelId)
+		{
+			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+
+			if (subscription is null)
+			{
+				return Result.FromError(new NullSubscriptionError());
+			}
+
+			_youtubeEntries.Remove(subscription);
+
+			return Result.FromSuccess();
+		}
+
+		public Task<(bool, IEnumerable<YoutubeSubscription>)> TryGetSubscriptionsAsync(string guildId)
+		{
+			var entries = _youtubeEntries.Where(entry => entry.GuildIds.Contains(guildId));
+
+			return Task.FromResult((entries.Any(), entries));
+		}
 	}
 }
