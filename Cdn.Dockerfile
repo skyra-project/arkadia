@@ -12,7 +12,7 @@ RUN dotnet publish Cdn -r linux-x64 -p:PublishSingleFile=true -p:DebugType=None 
 #   Runner Stage   #
 # ================ #
 
-FROM mcr.microsoft.com/dotnet/aspnet:5.0
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 
 WORKDIR /skyra/app
 
