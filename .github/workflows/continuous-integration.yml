@@ -24,15 +24,15 @@ jobs:
           - 5432:5432
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v2
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # renovate: tag=v2
         with:
           submodules: true
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@5a3fa01c67e60dba8f95e2878436c7151c4b5f01 # renovate: tag=v1
         with:
           dotnet-version: '5.0.x'
       - name: Restore CI Cache
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353 # renovate: tag=v2.1.6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
@@ -41,7 +41,7 @@ jobs:
       - name: Run C# unit tests
         run: dotnet test tests/UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings -c Release
       - name: Store code coverage report (Unit Tests)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@27121b0bdffd731efa15d66772be8dc71245d074 # renovate: tag=v2
         with:
           name: dotnet-coverage-unit
           path: tests/UnitTests/TestResults/
@@ -54,7 +54,7 @@ jobs:
         env:
           POSTGRES_DB: skyra-dotnet-test
       - name: Store code coverage report (Integration Tests)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@27121b0bdffd731efa15d66772be8dc71245d074 # renovate: tag=v2
         with:
           name: dotnet-coverage-integration
           path: tests/IntegrationTests/TestResults/
@@ -65,21 +65,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v2
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # renovate: tag=v2
         with:
           fetch-depth: 2
       - name: Download DotNet Unit Test Coverage report
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@3be87be14a055c47b01d3bd88f8fe02320a9bb60 # renovate: tag=v2
         with:
           name: dotnet-coverage-unit
           path: tests/UnitTests/TestResults/
       - name: Download DotNet IT Coverage report
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@3be87be14a055c47b01d3bd88f8fe02320a9bb60 # renovate: tag=v2
         with:
           name: dotnet-coverage-integration
           path: tests/IntegrationTests/TestResults/
       - name: Codecov Upload
-        uses: codecov/codecov-action@v2.1.0
+        uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # renovate: tag=v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
