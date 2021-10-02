@@ -99,7 +99,7 @@ namespace Notifications.Managers
 				return Result.FromError(new AllParametersNullError());
 			}
 
-			var repo = _repositoryFactory.GetRepository();
+			await using var repo = _repositoryFactory.GetRepository();
 
 			await repo.UpsertGuildAsync(guildId, uploadChannel, uploadMessage, liveChannel, liveMessage);
 
@@ -115,9 +115,9 @@ namespace Notifications.Managers
 				return Result<bool>.FromError(new ChannelInfoRetrievalError());
 			}
 
-			var respository = _repositoryFactory.GetRepository();
+			await using var repo = _repositoryFactory.GetRepository();
 
-			var subscription = await respository.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
+			var subscription = await repo.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
 			if (subscription is null)
 			{
@@ -144,7 +144,7 @@ namespace Notifications.Managers
 				return Result.FromSuccess();
 			}
 
-			var repo = _repositoryFactory.GetRepository();
+			await using var repo = _repositoryFactory.GetRepository();
 
 			var guild = await repo.GetGuildByIdOrDefaultAsync(guildId);
 
@@ -204,7 +204,7 @@ namespace Notifications.Managers
 
 		private async Task<Result> RemoveSubscriptionAsync(string guildId, string youtubeChannelId)
 		{
-			var repo = _repositoryFactory.GetRepository();
+			await using var repo = _repositoryFactory.GetRepository();
 
 			var subscription = await GetSubscriptionAsync(youtubeChannelId);
 
@@ -244,7 +244,7 @@ namespace Notifications.Managers
 
 		public async Task<Result> UnsubscribeFromAllAsync(string guildId)
 		{
-			var repo = _repositoryFactory.GetRepository();
+			await using var repo = _repositoryFactory.GetRepository();
 
 			var (exists, subscriptions) = await repo.TryGetSubscriptionsAsync(guildId);
 
@@ -277,9 +277,9 @@ namespace Notifications.Managers
 
 		public async Task AddSeenVideoAsync(string youtubeChannelId, string videoId)
 		{
-			using var database = new ArkadiaDbContext();
+			await using var repo = _repositoryFactory.GetRepository();
 
-			var subscription = await database.YoutubeSubscriptions.FindAsync(youtubeChannelId);
+			var subscription = await repo.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
 			if (subscription is null)
 			{
@@ -292,7 +292,7 @@ namespace Notifications.Managers
 			currentIdArray.CopyTo(newIdArray, 0);
 			newIdArray[currentIdArray.Length] = videoId;
 
-			await database.SaveChangesAsync();
+			await repo.UpdateSeenVideosAsync(youtubeChannelId, newIdArray);
 		}
 
 		public async Task UpdateChannelNameAsync(string youtubeChannelTitle, string youtubeChannelId)

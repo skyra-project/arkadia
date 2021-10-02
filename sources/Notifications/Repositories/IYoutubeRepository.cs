@@ -18,5 +18,6 @@ namespace Notifications.Repositories
 		Task<Result> RemoveGuildFromSubscriptionAsync(string youtubeChannelId, string guildId);
 		Task<Result> RemoveSubscriptionAsync(string youtubeChannelId);
 		Task<(bool, IEnumerable<YoutubeSubscription>)> TryGetSubscriptionsAsync(string guildId);
+		Task UpdateSeenVideosAsync(string youtubeChannelId, string[] seenVideos);
 	}
 }

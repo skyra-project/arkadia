@@ -153,5 +153,12 @@ namespace UnitTests.Notifications.Mocks
 
 			return Task.FromResult((entries.Any(), entries));
 		}
+
+		public Task UpdateSeenVideosAsync(string youtubeChannelId, string[] seenVideos)
+		{
+			var entry = _youtubeEntries.First(entry => entry.Id == youtubeChannelId);
+			entry.AlreadySeenIds = seenVideos;
+			return Task.CompletedTask;
+		}
 	}
 }

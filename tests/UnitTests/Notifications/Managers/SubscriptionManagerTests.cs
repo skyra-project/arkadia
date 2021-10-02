@@ -848,7 +848,6 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockNullReturningChannelInfoRepository();
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
-			var mockPubSubClient = new MockPubSubClient();
 
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
@@ -869,6 +868,65 @@ namespace UnitTests.Notifications.Managers
 			
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
 			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
+		}
+
+		[Test]
+		public async Task SubscriptionManager_AddSeenVideo_UpdatesCorrectly_WhenNoEntriesExist()
+		{
+			// arrange
+			
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			const string channelId = "1";
+			const string videoId = "1";
+
+			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
+
+			// act
+
+			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", "Captain Smeghead");
+
+			await manager.AddSeenVideoAsync(channelId, videoId);
+
+			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+			
+			Assert.That(subscription, Is.Not.Null);
+			Assert.That(subscription!.AlreadySeenIds, Has.Exactly(1).Items.EqualTo(videoId));
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_AddSeenVideo_UpdatesCorrectly_WhenEntriesDoExist()
+		{
+			// arrange
+			
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			const string channelId = "1";
+			const string videoId = "1";
+			var existingVideos = new[] { "10", "11", "12", "13" };
+
+			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
+
+			// act
+
+			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", "Captain Smeghead");
+			await mockRepo.UpdateSeenVideosAsync(channelId, existingVideos);
+			
+			await manager.AddSeenVideoAsync(channelId, videoId);
+
+			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+
+			var expected = existingVideos.Concat(new[] { videoId }).ToArray();
+			
+			Assert.That(subscription, Is.Not.Null);
+			Assert.That(subscription!.AlreadySeenIds, Has.Exactly(5).Items);
+			Assert.That(subscription!.AlreadySeenIds, Is.EqualTo(expected));
 		}
 		
 	}

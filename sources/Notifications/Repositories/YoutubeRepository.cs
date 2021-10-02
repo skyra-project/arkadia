@@ -159,5 +159,14 @@ namespace Notifications.Repositories
 			return (exists, subscriptions);
 		}
 
+		public async Task UpdateSeenVideosAsync(string youtubeChannelId, string[] seenVideos)
+		{
+			var subscription = await _context.YoutubeSubscriptions.FindAsync(youtubeChannelId);
+
+			subscription.AlreadySeenIds = seenVideos;
+
+			await _context.SaveChangesAsync();
+		}
+
 	}
 }
