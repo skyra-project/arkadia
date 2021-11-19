@@ -257,6 +257,79 @@ namespace IntegrationTests.Notifications.Repositories
 			Assert.That(response.YoutubeUploadLiveChannel, Is.EqualTo(guild.YoutubeUploadLiveChannel));
 		}
 
+		[Test]
+		public async Task YoutubeRepository_UpsertGuildAsync_UpsertsCorrectly_WhenGuildIsNull()
+		{
+			// arrange
+
+            var repository = new YoutubeRepository();
+			
+			const string guildId = "1";
+			const string uploadMessage = "test";
+			const string uploadChannelId = "1";
+			const string liveChannelId = "1";
+			const string liveMessage = "test";
+			
+            // act
+
+            await repository.UpsertGuildAsync(guildId, uploadChannelId, uploadMessage, liveChannelId, liveMessage);
+
+			var guild = await repository.GetGuildByIdOrDefaultAsync(guildId);
+			
+            // assert
+
+            Assert.That(guild, Is.Not.Null);
+			Assert.That(guild!.YoutubeUploadNotificationChannel, Is.EqualTo(uploadChannelId));
+			Assert.That(guild.YoutubeUploadNotificationMessage, Is.EqualTo(uploadMessage));
+			Assert.That(guild.YoutubeUploadLiveMessage, Is.EqualTo(liveMessage));
+			Assert.That(guild.YoutubeUploadLiveChannel, Is.EqualTo(liveChannelId));
+		}
+		
+		[Test]
+		public async Task YoutubeRepository_UpsertGuildAsync_UpsertsCorrectly_WhenGuildIsNotNull()
+        {
+            // arrange
+
+            var repository = new YoutubeRepository();
+
+            var guild = CreateDefaultGuild();
+
+			// act
+
+            await repository.UpsertGuildAsync(guild.Id, "new", "new", "new", "new");
+
+            var response = await repository.GetGuildByIdOrDefaultAsync(guild.Id);
+
+            // assert
+
+            Assert.That(response, Is.Not.Null);
+            Assert.That(response!.Id, Is.EqualTo(guild.Id));
+            Assert.That(response.YoutubeUploadNotificationChannel, Is.EqualTo("new"));
+            Assert.That(response.YoutubeUploadNotificationMessage, Is.EqualTo("new"));
+            Assert.That(response.YoutubeUploadLiveMessage, Is.EqualTo("new"));
+            Assert.That(response.YoutubeUploadLiveChannel, Is.EqualTo("new"));
+        }
+		
+		[Test]
+		public async Task YoutubeRepository_AddGuildToSubscription_AddsGuildCorrectly()
+        {
+            // arrange
+
+            var repository = new YoutubeRepository();
+            var guild = CreateDefaultGuild();
+
+            // act
+
+            await repository.AddSubscriptionAsync()
+
+            var result = await repository.GetGuildByIdOrDefaultAsync(guild.Id);
+
+            // assert
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result!.GuildIds, Has.Exactly(1).Items.EqualTo(guild.Id));
+        }
+
 		private Guild CreateDefaultGuild()
 		{
 			return new Guild

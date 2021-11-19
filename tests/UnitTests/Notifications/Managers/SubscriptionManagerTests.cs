@@ -22,7 +22,7 @@ namespace UnitTests.Notifications.Managers
 		[Test]
 		public async Task SubscriptionManager_Start_SetsUpManagerCorrectly()
 		{
-			
+
 			// arrange
 
 			var mockRepo = new MockNotificationRepository();
@@ -37,7 +37,7 @@ namespace UnitTests.Notifications.Managers
 			var expiresAt = DateTime.Now;
 			var guildIds = new[] { "test1", "test2" };
 			const string channelTitle = "cooltitle";
-			
+
 			// act
 
 
@@ -46,20 +46,20 @@ namespace UnitTests.Notifications.Managers
 			await manager.StartAsync();
 
 			// assert
-			
+
 			Assert.That(manager.ResubTimer.Enabled, Is.True);
 			Assert.That(manager.ResubscribeTimes, Has.Exactly(1).Items);
 			Assert.That(manager.ResubscribeTimes.Keys.First(), Is.EqualTo(id));
 			Assert.That(manager.ResubscribeTimes.Values.First(), Is.EqualTo(expiresAt));
-			
+
 			manager.ResubTimer.Stop();
 			manager.ResubTimer.Dispose();
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_UpdateSubscriptionSettings_ReturnsErrorWithNoParameters()
 		{
-			
+
 			// arrange
 
 			var mockRepo = new MockNotificationRepository();
@@ -79,15 +79,15 @@ namespace UnitTests.Notifications.Managers
 			// assert
 
 			Assert.That(result.IsSuccess, Is.False);
-			
+
 			manager.ResubTimer.Stop();
 			manager.ResubTimer.Dispose();
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_UpdateSubscriptionSettings_UpdatesCorrectly_WhenGuildAlreadyExists()
 		{
-			
+
 			// arrange
 
 			var mockRepo = new MockNotificationRepository();
@@ -100,7 +100,7 @@ namespace UnitTests.Notifications.Managers
 
 			const string id = "test";
 			const string uploadMessage = "hello!";
-			
+
 			// act
 
 
@@ -113,15 +113,15 @@ namespace UnitTests.Notifications.Managers
 			var guild = await mockRepo.GetGuildByIdOrDefaultAsync(id);
 
 			Assert.That(guild!.YoutubeUploadNotificationMessage, Is.EqualTo(uploadMessage));
-			
+
 			manager.ResubTimer.Stop();
 			manager.ResubTimer.Dispose();
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_UpdateSubscriptionSettings_InsertsCorrectly_WhenGuildDoesNotExist()
 		{
-			
+
 			// arrange
 
 			var mockRepo = new MockNotificationRepository();
@@ -134,7 +134,7 @@ namespace UnitTests.Notifications.Managers
 
 			const string id = "test";
 			const string uploadMessage = "hello!";
-			
+
 			// act
 
 			var firstGuild = await mockRepo.GetGuildByIdOrDefaultAsync(id);
@@ -144,13 +144,13 @@ namespace UnitTests.Notifications.Managers
 			await manager.UpdateSubscriptionSettingsAsync(id, uploadMessage: uploadMessage);
 
 			var secondGuild = await mockRepo.GetGuildByIdOrDefaultAsync(id);
-			
+
 			// assert
 
 			Assert.That(firstGuild, Is.Null);
 			Assert.That(secondGuild, Is.Not.Null);
 			Assert.That(secondGuild!.YoutubeUploadNotificationMessage, Is.EqualTo(uploadMessage));
-			
+
 			manager.ResubTimer.Stop();
 			manager.ResubTimer.Dispose();
 		}
@@ -161,19 +161,19 @@ namespace UnitTests.Notifications.Managers
 			// arrange
 
 			var nullChannelInfoRepo = new MockNullReturningChannelInfoRepository();
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				null!,
 				nullChannelInfoRepo,
 				null!);
-			
+
 			// act
 
 			var subscriptionExistsResult = await manager.IsSubscribedAsync("1", "notaurl");
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionExistsResult.IsSuccess, Is.False);
 			Assert.That(subscriptionExistsResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
 
@@ -187,30 +187,30 @@ namespace UnitTests.Notifications.Managers
 			const string youtubeChannelId = "123";
 			const string guildId = "1";
 			const string channelTitle = "generalKenobi";
-			
+
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), new[] { guildId }, channelTitle);
 
 			var subscriptionExistsResult = await manager.IsSubscribedAsync(guildId, "notaurl");
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionExistsResult.IsSuccess, Is.True);
 			Assert.That(subscriptionExistsResult.Entity, Is.True);
 
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_ReturnsSuccess_WhenSubscriptionExists()
 		{
@@ -219,29 +219,29 @@ namespace UnitTests.Notifications.Managers
 			const string youtubeChannelId = "123";
 			const string guildId = "1";
 			const string channelTitle = "generalKenobi";
-			
+
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), new[] { guildId }, channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.True);
 
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_ReturnsError_WhenIsSubscribedFails()
 		{
@@ -254,21 +254,21 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockNullReturningChannelInfoRepository();
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), new[] { guildId }, channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 
 		}
@@ -285,21 +285,21 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 		}
 
@@ -334,7 +334,7 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<UnconfiguredError>());
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_ReturnsUnconfiguredError_WhenGuildHasNoUploadMessage()
 		{
@@ -347,26 +347,26 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", null, "1", "test");
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<UnconfiguredError>());
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_ReturnsUnconfiguredError_WhenGuildHasNoLiveChannel()
 		{
@@ -379,26 +379,26 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", null, "test");
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync("youtubeChannelId", guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<UnconfiguredError>());
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_ReturnsUnconfiguredError_WhenGuildHasNoLiveMessage()
 		{
@@ -411,22 +411,22 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", "1", null);
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<UnconfiguredError>());
 		}
@@ -443,29 +443,29 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", "1", "test");
-			
+
 			channelInfoRepo.FailNext();
 
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Subscribe_AddsGuildToSubscription_WhenGuildIsNotAlreadyInSubscriptions()
 		{
@@ -478,22 +478,22 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelTitle);
 			var notificationRepo = new MockNotificationRepository();
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", "1", "test");
 			await notificationRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.Now.AddDays(10), Array.Empty<string>(), channelTitle);
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.True);
 			Assert.That(notificationRepo.GetSubscriptions(), Has.Exactly(1).Property("GuildIds").Contains(guildId));
 		}
@@ -512,21 +512,21 @@ namespace UnitTests.Notifications.Managers
 			var mockNotificationFactory = new MockNotificationRepositoryFactory(notificationRepo);
 
 			var mockFailingPubSubClient = new MockFailingPubSubHubClient();
-			
+
 			var manager = new SubscriptionManager(mockFailingPubSubClient,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", "1", "test");
 
 			var subscriptionResult = await manager.SubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(subscriptionResult.IsSuccess, Is.False);
 			Assert.That(subscriptionResult.Error, Is.InstanceOf<PubSubHubBubError>());
 		}
@@ -546,17 +546,17 @@ namespace UnitTests.Notifications.Managers
 
 			var now = DateTime.UtcNow;
 			var fiveDays = now.AddDays(5);
-			
+
 			var mockDateTimeRepo = new MockDateTimeRepository(now);
-			
+
 			var mockPubSubClient = new MockPubSubClient();
-			
+
 			var manager = new SubscriptionManager(mockPubSubClient,
 				new NullLogger<SubscriptionManager>(),
 				mockNotificationFactory,
 				channelInfoRepo,
 				mockDateTimeRepo);
-			
+
 			// act
 
 			await notificationRepo.UpsertGuildAsync(guildId, "1", "test", "1", "test");
@@ -571,7 +571,7 @@ namespace UnitTests.Notifications.Managers
 				Id = youtubeChannelId,
 				GuildIds = new[] { guildId }
 			};
-			
+
 			// assert
 
 			Assert.That(subscriptionResult.IsSuccess, Is.True);
@@ -594,13 +594,13 @@ namespace UnitTests.Notifications.Managers
 				null!,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
 			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
 		}
@@ -618,26 +618,26 @@ namespace UnitTests.Notifications.Managers
 			var channelInfoRepo = new MockFakeChannelInfoRepository(youtubeChannelId, channelName);
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
-			
+
 			var manager = new SubscriptionManager(null!,
 				new NullLogger<SubscriptionManager>(),
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await mockRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.UtcNow.AddDays(5), new[] { firstGuildId, secondGuildId }, channelName);
-			
+
 			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, firstGuildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
 			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(1).With.Property("GuildIds").Contains(secondGuildId));
 			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(1).With.Property("GuildIds").Not.Contains(firstGuildId));
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Unsubscribe_RemovesSubscription_WhenOnlyOneGuildIsSubscribed()
 		{
@@ -651,25 +651,25 @@ namespace UnitTests.Notifications.Managers
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
 			var mockPubSubClient = new MockPubSubClient();
-			
+
 			var manager = new SubscriptionManager(mockPubSubClient,
 				new NullLogger<SubscriptionManager>(),
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await mockRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.UtcNow.AddDays(5), firstGuildId, channelName);
-			
+
 			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, firstGuildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
 			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(0).Items);
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Unsubscribe_ReturnsMissingSubscriptionError_WhenGuildIsNotSubscribed()
 		{
@@ -690,19 +690,19 @@ namespace UnitTests.Notifications.Managers
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			await mockRepo.AddSubscriptionAsync(youtubeChannelId, DateTime.UtcNow.AddDays(5), new[] { firstGuildId, secondGuildId }, channelName);
-			
+
 			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, thirdGuildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
 			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<MissingSubscriptionError>());
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_Unsubscribe_ReturnsNullSubscriptionError_WhenSubscriptionDoesNotExist()
 		{
@@ -721,13 +721,13 @@ namespace UnitTests.Notifications.Managers
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
 			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<NullSubscriptionError>());
 		}
@@ -750,16 +750,16 @@ namespace UnitTests.Notifications.Managers
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_UnsubscribeFromAll_ReturnsChannelInfoRetrievalError_WhenChannelInfoFetchingFails()
 		{
@@ -778,28 +778,28 @@ namespace UnitTests.Notifications.Managers
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			var unSubscriptionResult = await manager.UnsubscribeAsync(youtubeChannelId, guildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
 			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
 		}
-	
+
 		[Test]
 		public async Task SubscriptionManager_UnsubscribeFromAll_RemovesSubscriptions()
 		{
 			// arrange
-			
+
 			const string guildId = "1";
 
 			var channelIds = new[] { "1", "2", "3", "1" };
 			var channelNames = new[] { "smeg", "head", "cadet", "rimmer" };
 
-			var channelInfoRepo = new MockFakeChannelInfoRepository(channelIds,  channelNames, true);
+			var channelInfoRepo = new MockFakeChannelInfoRepository(channelIds, channelNames, true);
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
 			var mockPubSubClient = new MockPubSubClient();
@@ -809,7 +809,7 @@ namespace UnitTests.Notifications.Managers
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			for (var i = 0; i < 3; i++)
@@ -819,31 +819,31 @@ namespace UnitTests.Notifications.Managers
 
 			channelInfoRepo.SetChannelIds(new[] { channelIds[0] });
 			channelInfoRepo.SetChannelNames(new[] { channelNames[0] });
-			
+
 			await mockRepo.AddSubscriptionAsync(channelIds[0], DateTime.Now, "2", channelIds[0]);
 
-			
+
 			channelInfoRepo.SetChannelIds(channelIds);
 			channelInfoRepo.SetChannelNames(channelNames);
-			
+
 			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.True);
 			Assert.That(mockRepo.GetSubscriptions(), Has.Exactly(1).With.Property("GuildIds").Contains("2"));
 			Assert.That(mockRepo.GetSubscriptions(), Has.None.With.Property("GuildIds").Contains("1"));
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_UnsubscribeFromAll_ReturnsChannelInfoRetrievalError_WhenChannelInfoFetchFails()
 		{
 			// arrange
-			
+
 			const string guildId = "1";
 
-			var channelIds = new[] { "1", "2", "3"};
-			var channelNames = new[] { "smeg", "head", "cadet"};
+			var channelIds = new[] { "1", "2", "3" };
+			var channelNames = new[] { "smeg", "head", "cadet" };
 
 			var channelInfoRepo = new MockNullReturningChannelInfoRepository();
 			var mockRepo = new MockNotificationRepository();
@@ -854,7 +854,7 @@ namespace UnitTests.Notifications.Managers
 				mockRepoFactory,
 				channelInfoRepo,
 				null!);
-			
+
 			// act
 
 			for (var i = 0; i < 3; i++)
@@ -863,9 +863,9 @@ namespace UnitTests.Notifications.Managers
 			}
 
 			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
-			
+
 			// assert
-			
+
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
 			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<ChannelInfoRetrievalError>());
 		}
@@ -874,7 +874,7 @@ namespace UnitTests.Notifications.Managers
 		public async Task SubscriptionManager_AddSeenVideo_UpdatesCorrectly_WhenNoEntriesExist()
 		{
 			// arrange
-			
+
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
 
@@ -892,16 +892,40 @@ namespace UnitTests.Notifications.Managers
 			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
 
 			// assert
-			
+
 			Assert.That(subscription, Is.Not.Null);
 			Assert.That(subscription!.AlreadySeenIds, Has.Exactly(1).Items.EqualTo(videoId));
 		}
 		
 		[Test]
+		public async Task SubscriptionManager_AddSeenVideo_UpdatesCorrectly_WhenSubscriptionIsNull()
+		{
+			// arrange
+
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			const string channelId = "1";
+			const string videoId = "1";
+
+			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
+
+			// act
+
+			await manager.AddSeenVideoAsync(channelId, videoId);
+
+			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+
+			Assert.That(subscription, Is.Null);
+		}
+
+		[Test]
 		public async Task SubscriptionManager_AddSeenVideo_UpdatesCorrectly_WhenEntriesDoExist()
 		{
 			// arrange
-			
+
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
 
@@ -915,7 +939,7 @@ namespace UnitTests.Notifications.Managers
 
 			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", "Captain Smeghead");
 			await mockRepo.UpdateSeenVideosAsync(channelId, existingVideos);
-			
+
 			await manager.AddSeenVideoAsync(channelId, videoId);
 
 			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
@@ -923,36 +947,110 @@ namespace UnitTests.Notifications.Managers
 			// assert
 
 			var expected = existingVideos.Concat(new[] { videoId }).ToArray();
-			
+
 			Assert.That(subscription, Is.Not.Null);
 			Assert.That(subscription!.AlreadySeenIds, Has.Exactly(5).Items);
 			Assert.That(subscription!.AlreadySeenIds, Is.EqualTo(expected));
 		}
 
 		[Test]
-		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly()
+		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly_WhenEntryNotNull()
 		{
+			// arrange
+
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			const string firstChannelName = "Captain Smeghead";
+			const string secondChannelName = "Captain Smeghead 2";
+
+			const string channelId = "1";
+
+			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
+
+			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", firstChannelName);
 			
+			// act
+
+			await manager.UpdateChannelNameAsync(secondChannelName, channelId);
+			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+
+			Assert.That(subscription, Is.Not.Null);
+			Assert.That(subscription!.ChannelTitle, Is.EqualTo(secondChannelName));
 		}
 		
-	}
-
-	internal class YoutubeSubscriptionComparer : IEqualityComparer<YoutubeSubscription>
-	{
-
-		public bool Equals(YoutubeSubscription x, YoutubeSubscription y)
+		
+		[Test]
+		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly_WhenEntryHasSame()
 		{
-			if (ReferenceEquals(x, y)) return true;
-			return x.Id == y.Id 
-					&& x.AlreadySeenIds.Equals(y.AlreadySeenIds) 
-					&& x.ExpiresAt.Equals(y.ExpiresAt) 
-					&& x.GuildIds.SequenceEqual(y.GuildIds) 
-					&& x.ChannelTitle == y.ChannelTitle;
+			// arrange
+
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+
+			const string firstChannelName = "Captain Smeghead";
+			const string secondChannelName = "Captain Smeghead";
+
+			const string channelId = "1";
+
+			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
+
+			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", firstChannelName);
+			
+			// act
+
+			await manager.UpdateChannelNameAsync(secondChannelName, channelId);
+			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+
+			Assert.That(subscription, Is.Not.Null);
+			Assert.That(subscription!.ChannelTitle, Is.EqualTo(secondChannelName));
+		}
+		
+		[Test]
+		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly()
+		{
+			// arrange
+
+			var mockRepo = new MockNotificationRepository();
+			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
+			
+			const string secondChannelName = "Captain Smeghead 2";
+
+			const string channelId = "1";
+
+			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
+
+			// act
+
+			await manager.UpdateChannelNameAsync(secondChannelName, channelId);
+			var subscription = await mockRepo.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+
+			Assert.That(subscription, Is.Null);
 		}
 
-		public int GetHashCode(YoutubeSubscription obj)
+		internal class YoutubeSubscriptionComparer : IEqualityComparer<YoutubeSubscription>
 		{
-			return HashCode.Combine(obj.Id, obj.AlreadySeenIds, obj.ExpiresAt, obj.GuildIds, obj.ChannelTitle);
+
+			public bool Equals(YoutubeSubscription x, YoutubeSubscription y)
+			{
+				if (ReferenceEquals(x, y)) return true;
+				return x.Id == y.Id
+						&& x.AlreadySeenIds.Equals(y.AlreadySeenIds)
+						&& x.ExpiresAt.Equals(y.ExpiresAt)
+						&& x.GuildIds.SequenceEqual(y.GuildIds)
+						&& x.ChannelTitle == y.ChannelTitle;
+			}
+
+			public int GetHashCode(YoutubeSubscription obj)
+			{
+				return HashCode.Combine(obj.Id, obj.AlreadySeenIds, obj.ExpiresAt, obj.GuildIds, obj.ChannelTitle);
+			}
 		}
 	}
 }

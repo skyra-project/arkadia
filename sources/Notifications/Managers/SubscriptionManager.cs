@@ -280,7 +280,7 @@ namespace Notifications.Managers
 			await using var repo = _repositoryFactory.GetRepository();
 
 			var subscription = await repo.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
-
+			
 			if (subscription is null)
 			{
 				_logger.LogWarning("Subscription to channel with ID {ChannelId} not found when trying to add seen video with ID {VideoId}", youtubeChannelId, videoId);
@@ -316,6 +316,8 @@ namespace Notifications.Managers
 			subscription.ChannelTitle = youtubeChannelTitle;
 		}
 
+		
+		[ExcludeFromCodeCoverage(Justification = "To simple to test")]
 		public IEnumerable<YoutubeSubscription> GetAllSubscriptionsAsync(string guildId)
 		{
 			var repo = _repositoryFactory.GetRepository();
