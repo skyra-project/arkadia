@@ -168,7 +168,7 @@ namespace Notifications.Services
 		[ExcludeFromCodeCoverage(Justification = "Tested elsewhere.")]
 		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext _)
 		{
-			var subscriptions = await _subscriptionManager.GetAllSubscriptionsAsync(request.GuildId);
+			var subscriptions = _subscriptionManager.GetAllSubscriptionsAsync(request.GuildId);
 
 			var response = new SubscriptionListResponse();
 

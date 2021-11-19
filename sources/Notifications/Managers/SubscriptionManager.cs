@@ -297,13 +297,13 @@ namespace Notifications.Managers
 
 		public async Task UpdateChannelNameAsync(string youtubeChannelTitle, string youtubeChannelId)
 		{
-			using var database = new ArkadiaDbContext();
+			var repository = _repositoryFactory.GetRepository();
 
 			var subscription = await GetSubscriptionAsync(youtubeChannelId);
 
 			if (subscription is null)
 			{
-				_logger.LogWarning("Could not find subscription for channel ID {Id} with name {Name} when trying to update the name.", youtubeChannelId, youtubeChannelTitle);
+				_logger.LogWarning("Could not find subscription for channel ID {Id} with name {Name} when trying to update the name", youtubeChannelId, youtubeChannelTitle);
 				return;
 			}
 
@@ -314,15 +314,14 @@ namespace Notifications.Managers
 			}
 
 			subscription.ChannelTitle = youtubeChannelTitle;
-
-			await database.SaveChangesAsync();
 		}
 
-		public async Task<YoutubeSubscription[]> GetAllSubscriptionsAsync(string guildId)
+		public IEnumerable<YoutubeSubscription> GetAllSubscriptionsAsync(string guildId)
 		{
-			using var database = new ArkadiaDbContext();
+			var repo = _repositoryFactory.GetRepository();
 
-			return await database.YoutubeSubscriptions.ToArrayAsync();
+			return repo.GetSubscriptions()
+				.Where(subscription => subscription.GuildIds.Contains(guildId));
 		}
 	}
 

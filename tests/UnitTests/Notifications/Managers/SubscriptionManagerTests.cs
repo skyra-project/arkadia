@@ -928,6 +928,12 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(subscription!.AlreadySeenIds, Has.Exactly(5).Items);
 			Assert.That(subscription!.AlreadySeenIds, Is.EqualTo(expected));
 		}
+
+		[Test]
+		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly()
+		{
+			
+		}
 		
 	}
 
