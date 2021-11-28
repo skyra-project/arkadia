@@ -729,7 +729,7 @@ namespace UnitTests.Notifications.Managers
 			// assert
 
 			Assert.That(unSubscriptionResult.IsSuccess, Is.False);
-			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<NullSubscriptionError>());
+			Assert.That(unSubscriptionResult.Error, Is.InstanceOf<MissingSubscriptionError>());
 		}
 
 		[Test]

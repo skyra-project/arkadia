@@ -236,7 +236,7 @@ namespace Notifications.Managers
 			else
 			{
 				_logger.LogWarning("Subscription with id {Id} does not exist, yet an attempt was made to unsubscribe from it", youtubeChannelId);
-				return Result.FromError(new NullSubscriptionError());
+				return Result.FromError(new MissingSubscriptionError());
 			}
 
 			return Result.FromSuccess();

@@ -118,7 +118,7 @@ namespace UnitTests.Notifications.Mocks
 
 			if (subscription is null)
 			{
-				return Result.FromError(new NullSubscriptionError());
+				return Result.FromError(new MissingSubscriptionError());
 			}
 
 			var containsGuild = subscription.GuildIds.Contains(guildId);
@@ -139,7 +139,7 @@ namespace UnitTests.Notifications.Mocks
 
 			if (subscription is null)
 			{
-				return Result.FromError(new NullSubscriptionError());
+				return Result.FromError(new MissingSubscriptionError());
 			}
 
 			_youtubeEntries.Remove(subscription);

@@ -90,8 +90,6 @@ namespace Notifications.Repositories
 
 		public async Task<Result> AddGuildToSubscriptionAsync(string youtubeChannelId, string guildId)
 		{
-			await using var context = new ArkadiaDbContext();
-
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
 			if (subscription is null)
@@ -117,14 +115,14 @@ namespace Notifications.Repositories
 
 			if (subscription is null)
 			{
-				return Result.FromError(new NullSubscriptionError());
+				return Result.FromError(new MissingSubscriptionError());
 			}
 
 			var containsGuild = subscription.GuildIds.Contains(guildId);
 
 			if (!containsGuild)
 			{
-				return Result.FromError(new MissingSubscriptionError());
+				return Result.FromError(new MissingGuildError());
 			}
 
 			subscription.GuildIds = subscription.GuildIds.Where(id => id != guildId).ToArray();
@@ -139,7 +137,7 @@ namespace Notifications.Repositories
 
 			if (subscription is null)
 			{
-				return Result.FromError(new NullSubscriptionError());
+				return Result.FromError(new MissingSubscriptionError());
 			}
 
 			_context.YoutubeSubscriptions.Remove(subscription);
