@@ -320,7 +320,7 @@ namespace IntegrationTests.Notifications.Repositories
 
             // act
 
-            await repository.AddSubscriptionAsync()
+            await repository.AddSubscriptionAsync();
 
             var result = await repository.GetGuildByIdOrDefaultAsync(guild.Id);
 
