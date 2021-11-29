@@ -1037,7 +1037,7 @@ namespace UnitTests.Notifications.Managers
 		internal class YoutubeSubscriptionComparer : IEqualityComparer<YoutubeSubscription>
 		{
 
-			public bool Equals(YoutubeSubscription x, YoutubeSubscription y)
+			public bool Equals(YoutubeSubscription? x, YoutubeSubscription? y)
 			{
 				if (ReferenceEquals(x, y)) return true;
 				return x.Id == y.Id
