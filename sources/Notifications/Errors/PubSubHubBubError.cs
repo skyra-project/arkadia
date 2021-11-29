@@ -6,6 +6,6 @@ namespace Notifications.Errors
 	[ExcludeFromCodeCoverage]
 	public class PubSubHubBubError : IResultError
 	{
-		public string Message => "";
+		public string Message => "Error from the publishing hub. Please check logs for details.";
 	}
 }
