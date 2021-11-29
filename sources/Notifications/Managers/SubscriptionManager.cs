@@ -318,7 +318,7 @@ namespace Notifications.Managers
 
 		
 		[ExcludeFromCodeCoverage(Justification = "To simple to test")]
-		public IEnumerable<YoutubeSubscription> GetAllSubscriptionsAsync(string guildId)
+		public IEnumerable<YoutubeSubscription> GetAllSubscriptions(string guildId)
 		{
 			var repo = _repositoryFactory.GetRepository();
 

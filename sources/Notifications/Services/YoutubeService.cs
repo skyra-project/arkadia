@@ -161,7 +161,7 @@ namespace Notifications.Services
 		
 		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext _)
 		{
-			var subscriptions = _subscriptionManager.GetAllSubscriptionsAsync(request.GuildId);
+			var subscriptions = _subscriptionManager.GetAllSubscriptions(request.GuildId);
 
 			var response = new SubscriptionListResponse();
 
