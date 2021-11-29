@@ -1039,6 +1039,8 @@ namespace UnitTests.Notifications.Managers
 
 			public bool Equals(YoutubeSubscription? x, YoutubeSubscription? y)
 			{
+				if (x is null || y is null) return false; 
+				
 				if (ReferenceEquals(x, y)) return true;
 				return x.Id == y.Id
 						&& x.AlreadySeenIds.Equals(y.AlreadySeenIds)
