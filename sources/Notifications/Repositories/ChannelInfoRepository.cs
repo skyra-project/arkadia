@@ -12,7 +12,7 @@ namespace Notifications.Repositories
 	{
 		private readonly IBrowsingContext _browsingContext;
 		private readonly ILogger<ChannelInfoRepository> _logger;
-		
+
 		public ChannelInfoRepository(IBrowsingContext browsingContext, ILogger<ChannelInfoRepository> logger)
 		{
 			_browsingContext = browsingContext;

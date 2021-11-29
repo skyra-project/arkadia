@@ -35,10 +35,7 @@ namespace Cdn.Services
 
 			var cdnEntry = await repository.GetEntryByNameOrDefaultAsync(request.Name);
 
-			if (cdnEntry is null)
-			{
-				return DoesNotExistFile();
-			}
+			if (cdnEntry is null) return DoesNotExistFile();
 
 			var path = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
 			var exists = _fileSystem.File.Exists(path);

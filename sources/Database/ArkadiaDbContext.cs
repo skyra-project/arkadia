@@ -42,10 +42,7 @@ namespace Database
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
-			if (optionsBuilder.IsConfigured)
-			{
-				return;
-			}
+			if (optionsBuilder.IsConfigured) return;
 
 			var user = Environment.GetEnvironmentVariable("POSTGRES_USER") ?? "postgres";
 			var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD") ?? "postgres";

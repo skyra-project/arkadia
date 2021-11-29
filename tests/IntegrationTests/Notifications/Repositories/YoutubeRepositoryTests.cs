@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Database;
 using Database.Models.Entities;
 using Notifications.Errors;
-using Notifications.Factories;
 using Notifications.Repositories;
 using NUnit.Framework;
 
@@ -19,15 +18,9 @@ namespace IntegrationTests.Notifications.Repositories
 		{
 			await using var context = new ArkadiaDbContext();
 
-			foreach (var entry in context.YoutubeSubscriptions)
-			{
-				context.Remove(entry);
-			}
-			
-			foreach (var entry in context.Guilds)
-			{
-				context.Remove(entry);
-			}
+			foreach (var entry in context.YoutubeSubscriptions) context.Remove(entry);
+
+			foreach (var entry in context.Guilds) context.Remove(entry);
 
 			await context.SaveChangesAsync();
 		}
@@ -35,7 +28,7 @@ namespace IntegrationTests.Notifications.Repositories
 		[Test]
 		public async Task YoutubeRepository_GetSubscriptionByIdOrDefaultAsync_ReturnsNull_WhenEntryDoesNotExist()
 		{
-			
+
 			// arrange
 
 			var repository = new YoutubeRepository();
@@ -46,7 +39,7 @@ namespace IntegrationTests.Notifications.Repositories
 			var response = await repository.GetSubscriptionByIdOrDefaultAsync(name);
 
 			// assert
-			
+
 			Assert.That(response, Is.Null);
 		}
 
@@ -56,7 +49,7 @@ namespace IntegrationTests.Notifications.Repositories
 			// arrange
 
 			var repository = new YoutubeRepository();
-			
+
 			await using var context = new ArkadiaDbContext();
 
 			const string id = "test1";
@@ -64,7 +57,7 @@ namespace IntegrationTests.Notifications.Repositories
 			var expiresAt = DateTime.Now;
 			var guildIds = new[] { "id1", "id2" };
 			var alreadySeenIds = new[] { "id1", "id2" };
-			
+
 			var expected = new YoutubeSubscription
 			{
 				Id = id,
@@ -100,7 +93,7 @@ namespace IntegrationTests.Notifications.Repositories
 
 			const string id = "test1";
 			const string channelTitle = "coolTitle";
-			var expiresAt = DateTime.UtcNow; 
+			var expiresAt = DateTime.UtcNow;
 			var guildIds = new[] { "id1", "id2" };
 			var alreadySeenIds = new[] { "id1", "id2" };
 
@@ -116,40 +109,40 @@ namespace IntegrationTests.Notifications.Repositories
 			await repository.ModifyExpiryAsync(id, newExpiresAt);
 
 			var newEntity = await repository.GetSubscriptionByIdOrDefaultAsync(id);
-			
+
 			Assert.That(newEntity!.ExpiresAt, Is.EqualTo(newExpiresAt));
 		}
 
 		[Test]
 		public void YoutubeRepository_GetSubscriptions_ReturnsEmpty_WhenNoSubscriptionsExist()
 		{
-			
+
 			// arrange
-			
+
 			var repository = new YoutubeRepository();
-			
+
 			// act
 
 			var subscriptions = repository.GetSubscriptions();
-			
+
 			// assert
-			
+
 			Assert.That(subscriptions, Is.Empty);
 		}
-		
+
 		[Test]
 		public async Task YoutubeRepository_GetSubscriptions_ReturnsItems_WhenSubscriptionsExist()
 		{
-			
+
 			// arrange
-			
+
 			var repository = new YoutubeRepository();
 
 			using var context = new ArkadiaDbContext();
 
-			var items = new YoutubeSubscription[]
+			var items = new[]
 			{
-				new YoutubeSubscription
+				new()
 				{
 					Id = "1",
 					ChannelTitle = "cooltitle",
@@ -164,18 +157,15 @@ namespace IntegrationTests.Notifications.Repositories
 					GuildIds = new[] { "guild1" }
 				}
 			};
-			
+
 			// act
 
-			foreach (var sub in items)
-			{
-				await repository.AddSubscriptionAsync(sub.Id, sub.ExpiresAt, sub.GuildIds[0], sub.ChannelTitle);
-			}
+			foreach (var sub in items) await repository.AddSubscriptionAsync(sub.Id, sub.ExpiresAt, sub.GuildIds[0], sub.ChannelTitle);
 
 			var subscriptions = repository.GetSubscriptions().ToArray();
 
 			// assert
-			
+
 			Assert.That(subscriptions, Is.Not.Empty);
 			Assert.That(subscriptions, Is.EquivalentTo(items).Using(new YoutubeSubscriptionComparer()));
 		}
@@ -183,7 +173,7 @@ namespace IntegrationTests.Notifications.Repositories
 		[Test]
 		public async Task YoutubeRepository_AddSubscription_AddsSubscriptionCorrectly()
 		{
-			
+
 			// arrange
 
 			await using var repo = new YoutubeRepository();
@@ -198,25 +188,25 @@ namespace IntegrationTests.Notifications.Repositories
 				Id = id,
 				ChannelTitle = channelTitle,
 				ExpiresAt = expiryTime,
-				GuildIds = new []{ guildId }
+				GuildIds = new[] { guildId }
 			};
-			
+
 			// act
 
 			await repo.AddSubscriptionAsync(id, expiryTime, guildId, channelTitle);
 
 			var result = repo.GetSubscriptions().ToArray();
-			
+
 			// assert
-			
+
 			Assert.That(result, Has.Exactly(1).Items);
 			Assert.That(result.First(), Is.EqualTo(expected).Using(new YoutubeSubscriptionComparer()));
 		}
-		
+
 		[Test]
 		public async Task YoutubeRepository_GetGuildByIdOrDefaultAsync_ReturnsNull_WhenEntryDoesNotExist()
 		{
-			
+
 			// arrange
 
 			var repository = new YoutubeRepository();
@@ -227,7 +217,7 @@ namespace IntegrationTests.Notifications.Repositories
 			var response = await repository.GetGuildByIdOrDefaultAsync(name);
 
 			// assert
-			
+
 			Assert.That(response, Is.Null);
 		}
 
@@ -244,7 +234,7 @@ namespace IntegrationTests.Notifications.Repositories
 			var guild = CreateDefaultGuild();
 
 			// act
-			
+
 			await context.Guilds.AddAsync(guild);
 
 			await context.SaveChangesAsync();
@@ -263,82 +253,82 @@ namespace IntegrationTests.Notifications.Repositories
 		{
 			// arrange
 
-            var repository = new YoutubeRepository();
-			
+			var repository = new YoutubeRepository();
+
 			const string guildId = "1";
 			const string uploadMessage = "test";
 			const string uploadChannelId = "1";
 			const string liveChannelId = "1";
 			const string liveMessage = "test";
-			
-            // act
 
-            await repository.UpsertGuildAsync(guildId, uploadChannelId, uploadMessage, liveChannelId, liveMessage);
+			// act
+
+			await repository.UpsertGuildAsync(guildId, uploadChannelId, uploadMessage, liveChannelId, liveMessage);
 
 			var guild = await repository.GetGuildByIdOrDefaultAsync(guildId);
-			
-            // assert
 
-            Assert.That(guild, Is.Not.Null);
+			// assert
+
+			Assert.That(guild, Is.Not.Null);
 			Assert.That(guild!.YoutubeUploadNotificationChannel, Is.EqualTo(uploadChannelId));
 			Assert.That(guild.YoutubeUploadNotificationMessage, Is.EqualTo(uploadMessage));
 			Assert.That(guild.YoutubeUploadLiveMessage, Is.EqualTo(liveMessage));
 			Assert.That(guild.YoutubeUploadLiveChannel, Is.EqualTo(liveChannelId));
 		}
-		
+
 		[Test]
 		public async Task YoutubeRepository_UpsertGuildAsync_UpsertsCorrectly_WhenGuildIsNotNull()
-        {
-            // arrange
+		{
+			// arrange
 
-            var repository = new YoutubeRepository();
+			var repository = new YoutubeRepository();
 
-            var guild = CreateDefaultGuild();
+			var guild = CreateDefaultGuild();
 
 			// act
 
-            await repository.UpsertGuildAsync(guild.Id, "new", "new", "new", "new");
+			await repository.UpsertGuildAsync(guild.Id, "new", "new", "new", "new");
 
-            var response = await repository.GetGuildByIdOrDefaultAsync(guild.Id);
+			var response = await repository.GetGuildByIdOrDefaultAsync(guild.Id);
 
-            // assert
+			// assert
 
-            Assert.That(response, Is.Not.Null);
-            Assert.That(response!.Id, Is.EqualTo(guild.Id));
-            Assert.That(response.YoutubeUploadNotificationChannel, Is.EqualTo("new"));
-            Assert.That(response.YoutubeUploadNotificationMessage, Is.EqualTo("new"));
-            Assert.That(response.YoutubeUploadLiveMessage, Is.EqualTo("new"));
-            Assert.That(response.YoutubeUploadLiveChannel, Is.EqualTo("new"));
-        }
-		
+			Assert.That(response, Is.Not.Null);
+			Assert.That(response!.Id, Is.EqualTo(guild.Id));
+			Assert.That(response.YoutubeUploadNotificationChannel, Is.EqualTo("new"));
+			Assert.That(response.YoutubeUploadNotificationMessage, Is.EqualTo("new"));
+			Assert.That(response.YoutubeUploadLiveMessage, Is.EqualTo("new"));
+			Assert.That(response.YoutubeUploadLiveChannel, Is.EqualTo("new"));
+		}
+
 		[Test]
 		public async Task YoutubeRepository_AddGuildToSubscription_AddsGuildCorrectly()
-        {
-            // arrange
+		{
+			// arrange
 
-            var repository = new YoutubeRepository();
-            var defaultGuildId = "1";
+			var repository = new YoutubeRepository();
+			var defaultGuildId = "1";
 			var channelId = "1";
 			var channelTitle = "Battle of the Smegheads (HD)";
 
 			var newGuildId = "2";
 
-            // act
+			// act
 
-            await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
+			await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
 
 			var addResult = await repository.AddGuildToSubscriptionAsync(channelId, newGuildId);
-			
+
 			var result = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
 
-            // assert
+			// assert
 
-            Assert.That(result, Is.Not.Null);
+			Assert.That(result, Is.Not.Null);
 			Assert.That(addResult.IsSuccess, Is.True);
 			Assert.That(result!.GuildIds, Has.Exactly(2).Items);
 			Assert.That(result!.GuildIds, Has.One.Items.Contains(newGuildId));
-        }
-		
+		}
+
 		[Test]
 		public async Task YoutubeRepository_AddGuildToSubscription_ReturnsMissingSubscriptionError_WhenSubscriptionDoesNotExist()
 		{
@@ -346,19 +336,19 @@ namespace IntegrationTests.Notifications.Repositories
 
 			var repository = new YoutubeRepository();
 			var channelId = "1";
-            var guildId = "1";
+			var guildId = "1";
 
 			// act
 
 			var addResult = await repository.AddGuildToSubscriptionAsync(channelId, guildId);
 
 			// assert
-			
+
 			Assert.That(addResult.IsSuccess, Is.False);
 			Assert.That(addResult.Error, Is.InstanceOf<MissingSubscriptionError>());
 		}
-		
-				
+
+
 		[Test]
 		public async Task YoutubeRepository_RemovesGuildFromSubscription_RemovesGuildCorrectly()
 		{
@@ -378,9 +368,9 @@ namespace IntegrationTests.Notifications.Repositories
 
 			var addResult = await repository.AddGuildToSubscriptionAsync(channelId, newGuildId);
 			var addLastResult = await repository.AddGuildToSubscriptionAsync(channelId, lastGuildId);
-			
+
 			var removeResult = await repository.RemoveGuildFromSubscriptionAsync(channelId, newGuildId);
-			
+
 			var result = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
 
 			// assert
@@ -398,25 +388,25 @@ namespace IntegrationTests.Notifications.Repositories
 		{
 			// arrange
 
-            var repository = new YoutubeRepository();
-            var defaultGuildId = "1";
-            var channelId = "1";
-            var channelTitle = "Battle of the Smegheads (HD)";
+			var repository = new YoutubeRepository();
+			var defaultGuildId = "1";
+			var channelId = "1";
+			var channelTitle = "Battle of the Smegheads (HD)";
 
-            var newGuildId = "2";
+			var newGuildId = "2";
 
-            // act
+			// act
 
-            await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
+			await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
 
 			var removeResult = await repository.RemoveGuildFromSubscriptionAsync(channelId, newGuildId);
-            
-            // assert
 
-            Assert.That(removeResult.IsSuccess, Is.False);
-            Assert.That(removeResult.Error, Is.InstanceOf<MissingGuildError>());
+			// assert
+
+			Assert.That(removeResult.IsSuccess, Is.False);
+			Assert.That(removeResult.Error, Is.InstanceOf<MissingGuildError>());
 		}
-		
+
 		[Test]
 		public async Task YoutubeRepository_RemoveGuildFromSubscription_ReturnsMissingSubscriptionError_WhenSubscriptionDoesNotExist()
 		{
@@ -431,119 +421,119 @@ namespace IntegrationTests.Notifications.Repositories
 			var addResult = await repository.RemoveGuildFromSubscriptionAsync(channelId, guildId);
 
 			// assert
-			
+
 			Assert.That(addResult.IsSuccess, Is.False);
 			Assert.That(addResult.Error, Is.InstanceOf<MissingSubscriptionError>());
 		}
-		
+
 		[Test]
 		public async Task YoutubeRepository_RemoveSubscription_RemovesSubscriptionCorrectly()
-        {
-            // arrange
+		{
+			// arrange
 
-            var repository = new YoutubeRepository();
-            var defaultGuildId = "1";
-            var channelId = "1";
-            var channelTitle = "Battle of the Smegheads (HD)";
+			var repository = new YoutubeRepository();
+			var defaultGuildId = "1";
+			var channelId = "1";
+			var channelTitle = "Battle of the Smegheads (HD)";
 
-            // act
+			// act
 
-            await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
+			await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
 
-            var removeResult = await repository.RemoveSubscriptionAsync(channelId);
+			var removeResult = await repository.RemoveSubscriptionAsync(channelId);
 
-            var getResult = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
+			var getResult = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
 
-            // assert
-			
-            Assert.That(removeResult.IsSuccess, Is.True);
+			// assert
+
+			Assert.That(removeResult.IsSuccess, Is.True);
 			Assert.That(getResult, Is.Null);
 		}
-		
+
 		[Test]
-		public async Task YoutubeRepository_RemoveSubscription_ReturnsMissingSubscriptionError_WhenSubscriptionDoesNotExist() 
-        {
-            // arrange
+		public async Task YoutubeRepository_RemoveSubscription_ReturnsMissingSubscriptionError_WhenSubscriptionDoesNotExist()
+		{
+			// arrange
 
-            var repository = new YoutubeRepository();
-            var channelId = "1";
+			var repository = new YoutubeRepository();
+			var channelId = "1";
 
-            // act
+			// act
 
-            var removeResult = await repository.RemoveSubscriptionAsync(channelId);
+			var removeResult = await repository.RemoveSubscriptionAsync(channelId);
 
-            // assert
-            
-            Assert.That(removeResult.IsSuccess, Is.False);
-            Assert.That(removeResult.Error, Is.InstanceOf<MissingSubscriptionError>());
-        }
-		
+			// assert
+
+			Assert.That(removeResult.IsSuccess, Is.False);
+			Assert.That(removeResult.Error, Is.InstanceOf<MissingSubscriptionError>());
+		}
+
 		[Test]
 		public async Task YoutubeRepository_TryGetSubscriptionsAsync_ReturnsSubscriptionsCorrectly()
 		{
-            // arrange
+			// arrange
 
-            var repository = new YoutubeRepository();
-            var defaultGuildId = "1";
-            var channelId = "1";
-            var channelTitle = "Battle of the Smegheads (HD)";
+			var repository = new YoutubeRepository();
+			var defaultGuildId = "1";
+			var channelId = "1";
+			var channelTitle = "Battle of the Smegheads (HD)";
 
 			// act
 
-            await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
+			await repository.AddSubscriptionAsync(channelId, DateTime.Now, defaultGuildId, channelTitle);
 
 			var (success, result) = await repository.TryGetSubscriptionsAsync(defaultGuildId);
 
-            // assert
+			// assert
 
-            Assert.That(success, Is.True);
-            Assert.That(result.Count, Is.EqualTo(1));
+			Assert.That(success, Is.True);
+			Assert.That(result.Count, Is.EqualTo(1));
 			Assert.That(result.First().GuildIds, Has.One.Items.EqualTo(defaultGuildId));
 		}
-		
+
 		[Test]
 		public async Task YoutubeRepository_TryGetSubscriptionsAsync_ReturnsEmptyList_WhenNoSubscriptionsExist()
-        {
-            // arrange
-
-            var repository = new YoutubeRepository();
-            var channelId = "1";
-
-            // act
-
-            var (success, result) = await repository.TryGetSubscriptionsAsync(channelId);
-
-            // assert
-
-            Assert.That(success, Is.False);
-            Assert.That(result, Is.Empty);
-        }
-		
-		[Test]
-		public async Task YoutubeRepository_UpdateSeenVideos_UpdatesSeenVideosCorrectly()
 		{
-            // arrange
+			// arrange
 
-            var repository = new YoutubeRepository();
-            var guildId = "1";
-            var channelId = "1";
-            var channelTitle = "Battle of the Smegheads (HD)";
-
-            var videoId = "1";
+			var repository = new YoutubeRepository();
+			var channelId = "1";
 
 			// act
 
-            await repository.AddSubscriptionAsync(channelId, DateTime.Now, guildId, channelTitle);
+			var (success, result) = await repository.TryGetSubscriptionsAsync(channelId);
 
-			await repository.UpdateSeenVideosAsync(channelId, new []{ videoId });
+			// assert
 
-            var getResult = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
+			Assert.That(success, Is.False);
+			Assert.That(result, Is.Empty);
+		}
 
-            // assert
-			
+		[Test]
+		public async Task YoutubeRepository_UpdateSeenVideos_UpdatesSeenVideosCorrectly()
+		{
+			// arrange
+
+			var repository = new YoutubeRepository();
+			var guildId = "1";
+			var channelId = "1";
+			var channelTitle = "Battle of the Smegheads (HD)";
+
+			var videoId = "1";
+
+			// act
+
+			await repository.AddSubscriptionAsync(channelId, DateTime.Now, guildId, channelTitle);
+
+			await repository.UpdateSeenVideosAsync(channelId, new[] { videoId });
+
+			var getResult = await repository.GetSubscriptionByIdOrDefaultAsync(channelId);
+
+			// assert
+
 			Assert.That(getResult, Is.Not.Null);
 			Assert.That(getResult!.AlreadySeenIds, Has.Exactly(1).Items.EqualTo(videoId));
-        }
+		}
 
 		private Guild CreateDefaultGuild()
 		{
@@ -556,7 +546,7 @@ namespace IntegrationTests.Notifications.Repositories
 				YoutubeUploadLiveMessage = "test"
 			};
 		}
-		
+
 		private YoutubeSubscription GetDefaultSubscription(string id, string channelTitle, DateTime expiresAt, string[] guildIds, string[] alreadySeenIds)
 		{
 			return new YoutubeSubscription
@@ -568,7 +558,7 @@ namespace IntegrationTests.Notifications.Repositories
 				AlreadySeenIds = alreadySeenIds
 			};
 		}
-		
+
 		private class YoutubeSubscriptionComparer : IEqualityComparer<YoutubeSubscription>
 		{
 
@@ -586,16 +576,10 @@ namespace IntegrationTests.Notifications.Repositories
 			{
 				var hash = new HashCode();
 
-				foreach (var guildId in obj.GuildIds)
-				{
-					hash.Add(guildId);
-				}
+				foreach (var guildId in obj.GuildIds) hash.Add(guildId);
 
-				foreach (var alreadySeenId in obj.AlreadySeenIds)
-				{
-					hash.Add(alreadySeenId);
-				}
-				
+				foreach (var alreadySeenId in obj.AlreadySeenIds) hash.Add(alreadySeenId);
+
 				hash.Add(obj.Id);
 				hash.Add(obj.ChannelTitle);
 				hash.Add(obj.ExpiresAt);

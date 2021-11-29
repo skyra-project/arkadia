@@ -30,10 +30,7 @@ namespace Cdn
 
 				var dnsUrl = Environment.GetEnvironmentVariable("SENTRY_URL");
 
-				if (dnsUrl is not null)
-				{
-					options.AddSentry(sentryOptions => sentryOptions.Dsn = dnsUrl);
-				}
+				if (dnsUrl is not null) options.AddSentry(sentryOptions => sentryOptions.Dsn = dnsUrl);
 			});
 		}
 

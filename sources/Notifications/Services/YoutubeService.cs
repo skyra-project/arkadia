@@ -21,9 +21,9 @@ namespace Notifications.Services
 	{
 		private readonly ILogger<YoutubeService> _logger;
 		private readonly ConcurrentQueue<Notification> _notificationQueue;
-		private readonly SubscriptionManager _subscriptionManager;
 		private readonly IYoutubeRepositoryFactory _repositoryFactory;
-		
+		private readonly SubscriptionManager _subscriptionManager;
+
 		public YoutubeService(ConcurrentQueue<Notification> notificationQueue, ILogger<YoutubeService> logger, SubscriptionManager subscriptionManager, IYoutubeRepositoryFactory repositoryFactory)
 		{
 			_notificationQueue = notificationQueue;
@@ -37,10 +37,7 @@ namespace Notifications.Services
 		{
 			while (true)
 			{
-				if (!_notificationQueue.TryDequeue(out var notification))
-				{
-					continue;
-				}
+				if (!_notificationQueue.TryDequeue(out var notification)) continue;
 
 				_logger.LogInformation("Sending notification {@Notification}", notification);
 
@@ -113,27 +110,27 @@ namespace Notifications.Services
 				_logger.LogInformation("Send notification for {VideoTitle} ({VideoId}) to guilds [{GuildIds}]", notification.Title, notification.VideoId, guildsToString);
 			}
 		}
-		
+
 		public override async Task<YoutubeServiceResponse> Subscribe(SubscriptionRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.SubscribeAsync(request.ChannelUrl, request.GuildId);
 
 			return managerResponse.AsYoutubeServiceResponse();
 		}
-		
+
 		public override async Task<YoutubeServiceResponse> Unsubscribe(SubscriptionRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UnsubscribeAsync(request.ChannelUrl, request.GuildId);
 
 			return managerResponse.AsYoutubeServiceResponse();
 		}
-		
+
 		public override async Task<YoutubeServiceResponse> SetDiscordUploadChannel(DiscordChannelRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, request.ChannelId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
-		
+
 		public override async Task<YoutubeServiceResponse> SetDiscordUploadMessage(DiscordMessageRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, uploadMessage: request.Content);
@@ -146,7 +143,7 @@ namespace Notifications.Services
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, liveChannel: request.ChannelId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
-		
+
 		public override async Task<YoutubeServiceResponse> SetDiscordLiveMessage(DiscordMessageRequest request, ServerCallContext _)
 		{
 			var managerResponse = await _subscriptionManager.UpdateSubscriptionSettingsAsync(request.GuildId, liveMessage: request.Content);
@@ -158,7 +155,7 @@ namespace Notifications.Services
 			var managerResponse = await _subscriptionManager.UnsubscribeFromAllAsync(request.GuildId);
 			return managerResponse.AsYoutubeServiceResponse();
 		}
-		
+
 		public override async Task<SubscriptionListResponse> GetSubscriptions(SubscriptionListRequest request, ServerCallContext _)
 		{
 			var subscriptions = _subscriptionManager.GetAllSubscriptions(request.GuildId);
@@ -174,7 +171,7 @@ namespace Notifications.Services
 			response.Info.AddRange(channelInformation);
 			return response;
 		}
-		
+
 		private static string GetChannelUrl(string youtubeChannelId)
 		{
 			return $"https://www.youtube.com/channel/{youtubeChannelId}";

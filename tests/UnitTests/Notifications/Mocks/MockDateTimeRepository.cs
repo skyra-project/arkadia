@@ -13,6 +13,9 @@ namespace UnitTests.Notifications.Mocks
 			_instance = instance;
 		}
 
-		public DateTime GetTime() => _instance;
+		public DateTime GetTime()
+		{
+			return _instance;
+		}
 	}
 }

@@ -39,10 +39,7 @@ namespace Notifications.Clients
 				var body = await result.Content.ReadAsStreamAsync();
 				var response = await JsonSerializer.DeserializeAsync<YoutubeApiResponse>(body);
 
-				if (response is null)
-				{
-					return Result<bool>.FromError(new YoutubeApiError("Body was not as expected."));
-				}
+				if (response is null) return Result<bool>.FromError(new YoutubeApiError("Body was not as expected."));
 
 				return Result<bool>.FromSuccess(response.IsLive);
 			}

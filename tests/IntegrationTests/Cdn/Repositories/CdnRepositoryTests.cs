@@ -16,10 +16,7 @@ namespace IntegrationTests.Cdn.Repositories
 		{
 			await using var context = new ArkadiaDbContext();
 
-			foreach (var entry in context.CdnEntries)
-			{
-				context.Remove(entry);
-			}
+			foreach (var entry in context.CdnEntries) context.Remove(entry);
 
 			await context.SaveChangesAsync();
 		}

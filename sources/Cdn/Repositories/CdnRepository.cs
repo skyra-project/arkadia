@@ -10,7 +10,7 @@ namespace Cdn.Repositories
 {
 	public class CdnRepository : ICdnRepository
 	{
-		private readonly ArkadiaDbContext _context = new ArkadiaDbContext();
+		private readonly ArkadiaDbContext _context = new();
 		private readonly ILogger<CdnRepository> _logger;
 
 		public CdnRepository(ILogger<CdnRepository> logger)

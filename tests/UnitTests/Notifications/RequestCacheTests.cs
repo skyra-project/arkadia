@@ -11,7 +11,7 @@ namespace UnitTests.Notifications
 		[Test]
 		public void RequestCache_GetRequest_ShouldReturnFalse_WhenRequestDoesNotExist()
 		{
-			
+
 			// arrange
 
 			var cache = new RequestCache(new NullLogger<RequestCache>());
@@ -23,15 +23,15 @@ namespace UnitTests.Notifications
 			var response = cache.GetRequest(requestId, subscription);
 
 			// assert
-			
+
 			Assert.That(response, Is.False);
 
 		}
-		
+
 		[Test]
 		public void RequestCache_GetRequest_ShouldReturnFalse_WhenRequestDoesExist_ButHasDifferentValue()
 		{
-			
+
 			// arrange
 
 			var cache = new RequestCache(new NullLogger<RequestCache>());
@@ -44,15 +44,15 @@ namespace UnitTests.Notifications
 			var response = cache.GetRequest(requestId, subscription);
 
 			// assert
-			
+
 			Assert.That(response, Is.False);
 
 		}
-		
+
 		[Test]
 		public void RequestCache_GetRequest_ShouldReturnTrue_WhenRequestDoesExist()
 		{
-			
+
 			// arrange
 
 			var cache = new RequestCache(new NullLogger<RequestCache>());
@@ -65,7 +65,7 @@ namespace UnitTests.Notifications
 			var response = cache.GetRequest(requestId, subscription);
 
 			// assert
-			
+
 			Assert.That(response, Is.True);
 		}
 	}

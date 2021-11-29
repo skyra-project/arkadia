@@ -10,7 +10,7 @@ namespace UnitTests.Cdn
 	public class MockCdnRepository : ICdnRepository
 	{
 
-		private readonly List<CdnEntry> _entries = new List<CdnEntry>();
+		private readonly List<CdnEntry> _entries = new();
 
 		public ValueTask DisposeAsync()
 		{
@@ -54,10 +54,7 @@ namespace UnitTests.Cdn
 		{
 			var entry = await GetEntryByNameOrDefaultAsync(name);
 
-			if (entry is not null)
-			{
-				_entries.Remove(entry);
-			}
+			if (entry is not null) _entries.Remove(entry);
 
 			return entry;
 		}

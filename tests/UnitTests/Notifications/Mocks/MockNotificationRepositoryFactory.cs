@@ -12,7 +12,7 @@ namespace UnitTests.Notifications.Mocks
 		{
 			_instance = instance;
 		}
-		
+
 		public MockNotificationRepositoryFactory() {}
 
 		public IYoutubeRepository GetRepository()

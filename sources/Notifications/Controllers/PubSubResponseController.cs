@@ -154,10 +154,7 @@ namespace Notifications.Controllers
 
 			var isLive = await _apiClient.IsVideoLiveAsync(videoId);
 
-			if (!isLive.IsSuccess)
-			{
-				_logger.LogError("Youtube API Client did not succeed in querying videos: {IsLiveError}", isLive.Error.Message);
-			}
+			if (!isLive.IsSuccess) _logger.LogError("Youtube API Client did not succeed in querying videos: {IsLiveError}", isLive.Error.Message);
 
 			_logger.LogTrace("Enqueuing video with ID {Id}", videoId);
 

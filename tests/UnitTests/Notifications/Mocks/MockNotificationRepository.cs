@@ -11,10 +11,10 @@ namespace UnitTests.Notifications.Mocks
 {
 	public class MockNotificationRepository : IYoutubeRepository
 	{
-		
-		private readonly List<YoutubeSubscription> _youtubeEntries = new List<YoutubeSubscription>();
-		private readonly List<Guild> _guildEntries = new List<Guild>();
-		
+		private readonly List<Guild> _guildEntries = new();
+
+		private readonly List<YoutubeSubscription> _youtubeEntries = new();
+
 		public ValueTask DisposeAsync()
 		{
 			return ValueTask.CompletedTask;
@@ -35,7 +35,7 @@ namespace UnitTests.Notifications.Mocks
 		public async Task ModifyExpiryAsync(string id, DateTime newTime)
 		{
 			var entry = await GetSubscriptionByIdOrDefaultAsync(id);
-			
+
 			if (entry is null) throw new ArgumentException(nameof(entry));
 
 			entry.ExpiresAt = newTime;
@@ -52,23 +52,11 @@ namespace UnitTests.Notifications.Mocks
 			{
 				Id = id,
 				ExpiresAt = expiresAt,
-				GuildIds = new []{ guildId },
+				GuildIds = new[] { guildId },
 				ChannelTitle = channelTitle,
 				AlreadySeenIds = Array.Empty<string>()
 			});
-			
-			return Task.CompletedTask;
-		}
 
-		public Task AddSubscriptionAsync(string id, DateTime expiresAt, string[] guildIds, string channelTitle)
-		{
-			_youtubeEntries.Add(new YoutubeSubscription
-			{
-				Id = id,
-				ExpiresAt = expiresAt,
-				GuildIds = guildIds,
-				ChannelTitle = channelTitle
-			});
 			return Task.CompletedTask;
 		}
 
@@ -84,7 +72,7 @@ namespace UnitTests.Notifications.Mocks
 				};
 				_guildEntries.Add(guild);
 			}
-			
+
 			guild.YoutubeUploadNotificationChannel = uploadChannel ?? guild.YoutubeUploadNotificationChannel;
 			guild.YoutubeUploadNotificationMessage = uploadMessage ?? guild.YoutubeUploadNotificationMessage;
 			guild.YoutubeUploadLiveChannel = liveChannel ?? guild.YoutubeUploadLiveChannel;
@@ -96,11 +84,8 @@ namespace UnitTests.Notifications.Mocks
 		public async Task<Result> AddGuildToSubscriptionAsync(string youtubeChannelId, string guildId)
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
-			
-			if (subscription is null)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+
+			if (subscription is null) return Result.FromError(new MissingSubscriptionError());
 
 			var currentlySubscribedGuilds = subscription.GuildIds;
 			var newSubscribedGuilds = new string[currentlySubscribedGuilds.Length + 1];
@@ -108,25 +93,19 @@ namespace UnitTests.Notifications.Mocks
 			newSubscribedGuilds[currentlySubscribedGuilds.Length] = guildId;
 
 			subscription.GuildIds = newSubscribedGuilds;
-			
+
 			return Result.FromSuccess();
 		}
-		
+
 		public async Task<Result> RemoveGuildFromSubscriptionAsync(string youtubeChannelId, string guildId)
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
-			if (subscription is null)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+			if (subscription is null) return Result.FromError(new MissingSubscriptionError());
 
 			var containsGuild = subscription.GuildIds.Contains(guildId);
 
-			if (!containsGuild)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+			if (!containsGuild) return Result.FromError(new MissingSubscriptionError());
 
 			subscription.GuildIds = subscription.GuildIds.Where(id => id != guildId).ToArray();
 
@@ -137,10 +116,7 @@ namespace UnitTests.Notifications.Mocks
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
-			if (subscription is null)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+			if (subscription is null) return Result.FromError(new MissingSubscriptionError());
 
 			_youtubeEntries.Remove(subscription);
 
@@ -158,6 +134,18 @@ namespace UnitTests.Notifications.Mocks
 		{
 			var entry = _youtubeEntries.First(entry => entry.Id == youtubeChannelId);
 			entry.AlreadySeenIds = seenVideos;
+			return Task.CompletedTask;
+		}
+
+		public Task AddSubscriptionAsync(string id, DateTime expiresAt, string[] guildIds, string channelTitle)
+		{
+			_youtubeEntries.Add(new YoutubeSubscription
+			{
+				Id = id,
+				ExpiresAt = expiresAt,
+				GuildIds = guildIds,
+				ChannelTitle = channelTitle
+			});
 			return Task.CompletedTask;
 		}
 	}

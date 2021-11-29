@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AngleSharp;
-using AngleSharp.Text;
 using Database.Models.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
-using Notifications.Clients;
 using Notifications.Errors;
 using Notifications.Managers;
-using Notifications.Repositories;
 using NUnit.Framework;
 using UnitTests.Notifications.Mocks;
 
@@ -812,10 +808,7 @@ namespace UnitTests.Notifications.Managers
 
 			// act
 
-			for (var i = 0; i < 3; i++)
-			{
-				await mockRepo.AddSubscriptionAsync(channelIds[i], DateTime.Now, "1", channelNames[i]);
-			}
+			for (var i = 0; i < 3; i++) await mockRepo.AddSubscriptionAsync(channelIds[i], DateTime.Now, "1", channelNames[i]);
 
 			channelInfoRepo.SetChannelIds(new[] { channelIds[0] });
 			channelInfoRepo.SetChannelNames(new[] { channelNames[0] });
@@ -857,10 +850,7 @@ namespace UnitTests.Notifications.Managers
 
 			// act
 
-			for (var i = 0; i < 3; i++)
-			{
-				await mockRepo.AddSubscriptionAsync(channelIds[i], DateTime.Now, "1", channelNames[i]);
-			}
+			for (var i = 0; i < 3; i++) await mockRepo.AddSubscriptionAsync(channelIds[i], DateTime.Now, "1", channelNames[i]);
 
 			var unSubscriptionResult = await manager.UnsubscribeFromAllAsync(guildId);
 
@@ -896,7 +886,7 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(subscription, Is.Not.Null);
 			Assert.That(subscription!.AlreadySeenIds, Has.Exactly(1).Items.EqualTo(videoId));
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_AddSeenVideo_UpdatesCorrectly_WhenSubscriptionIsNull()
 		{
@@ -969,7 +959,7 @@ namespace UnitTests.Notifications.Managers
 			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
 
 			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", firstChannelName);
-			
+
 			// act
 
 			await manager.UpdateChannelNameAsync(secondChannelName, channelId);
@@ -980,8 +970,8 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(subscription, Is.Not.Null);
 			Assert.That(subscription!.ChannelTitle, Is.EqualTo(secondChannelName));
 		}
-		
-		
+
+
 		[Test]
 		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly_WhenEntryHasSame()
 		{
@@ -998,7 +988,7 @@ namespace UnitTests.Notifications.Managers
 			var manager = new SubscriptionManager(null!, new NullLogger<SubscriptionManager>(), mockRepoFactory, null!, null!);
 
 			await mockRepo.AddSubscriptionAsync(channelId, DateTime.Now, "1", firstChannelName);
-			
+
 			// act
 
 			await manager.UpdateChannelNameAsync(secondChannelName, channelId);
@@ -1009,7 +999,7 @@ namespace UnitTests.Notifications.Managers
 			Assert.That(subscription, Is.Not.Null);
 			Assert.That(subscription!.ChannelTitle, Is.EqualTo(secondChannelName));
 		}
-		
+
 		[Test]
 		public async Task SubscriptionManager_UpdateChannelName_UpdatesCorrectly()
 		{
@@ -1017,7 +1007,7 @@ namespace UnitTests.Notifications.Managers
 
 			var mockRepo = new MockNotificationRepository();
 			var mockRepoFactory = new MockNotificationRepositoryFactory(mockRepo);
-			
+
 			const string secondChannelName = "Captain Smeghead 2";
 
 			const string channelId = "1";
@@ -1039,8 +1029,8 @@ namespace UnitTests.Notifications.Managers
 
 			public bool Equals(YoutubeSubscription? x, YoutubeSubscription? y)
 			{
-				if (x is null || y is null) return false; 
-				
+				if (x is null || y is null) return false;
+
 				if (ReferenceEquals(x, y)) return true;
 				return x.Id == y.Id
 						&& x.AlreadySeenIds.Equals(y.AlreadySeenIds)

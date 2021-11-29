@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Cdn.Repositories;
 using Database;
 using Database.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Notifications.Errors;
 using Remora.Results;
 
@@ -15,7 +13,7 @@ namespace Notifications.Repositories
 {
 	public class YoutubeRepository : IYoutubeRepository
 	{
-		private readonly ArkadiaDbContext _context = new ArkadiaDbContext();
+		private readonly ArkadiaDbContext _context = new();
 
 		[ExcludeFromCodeCoverage]
 		public ValueTask DisposeAsync()
@@ -36,7 +34,7 @@ namespace Notifications.Repositories
 		public async Task ModifyExpiryAsync(string id, DateTime newTime)
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(id);
-			
+
 			// leave this nullability warning, it is expected for the caller to check if it exists first
 			// if not, we'd like to throw anyway.
 			subscription!.ExpiresAt = newTime;
@@ -56,7 +54,7 @@ namespace Notifications.Repositories
 			{
 				Id = id,
 				ExpiresAt = expiresAt,
-				GuildIds = new []{ guildId },
+				GuildIds = new[] { guildId },
 				ChannelTitle = channelTitle
 			});
 
@@ -67,7 +65,7 @@ namespace Notifications.Repositories
 		{
 
 			var guild = await _context.Guilds.FindAsync(id);
-			
+
 			if (guild is null)
 			{
 				guild = new Guild
@@ -92,10 +90,7 @@ namespace Notifications.Repositories
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
-			if (subscription is null)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+			if (subscription is null) return Result.FromError(new MissingSubscriptionError());
 
 			var currentlySubscribedGuilds = subscription.GuildIds;
 			var newSubscribedGuilds = new string[currentlySubscribedGuilds.Length + 1];
@@ -105,7 +100,7 @@ namespace Notifications.Repositories
 			subscription.GuildIds = newSubscribedGuilds;
 
 			await _context.SaveChangesAsync();
-			
+
 			return Result.FromSuccess();
 		}
 
@@ -113,21 +108,15 @@ namespace Notifications.Repositories
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
-			if (subscription is null)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+			if (subscription is null) return Result.FromError(new MissingSubscriptionError());
 
 			var containsGuild = subscription.GuildIds.Contains(guildId);
 
-			if (!containsGuild)
-			{
-				return Result.FromError(new MissingGuildError());
-			}
+			if (!containsGuild) return Result.FromError(new MissingGuildError());
 
 			subscription.GuildIds = subscription.GuildIds.Where(id => id != guildId).ToArray();
 			await _context.SaveChangesAsync();
-			
+
 			return Result.FromSuccess();
 		}
 
@@ -135,25 +124,22 @@ namespace Notifications.Repositories
 		{
 			var subscription = await GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
 
-			if (subscription is null)
-			{
-				return Result.FromError(new MissingSubscriptionError());
-			}
+			if (subscription is null) return Result.FromError(new MissingSubscriptionError());
 
 			_context.YoutubeSubscriptions.Remove(subscription);
 			await _context.SaveChangesAsync();
-			
+
 			return Result.FromSuccess();
 		}
 
 		public async Task<(bool, IEnumerable<YoutubeSubscription>)> TryGetSubscriptionsAsync(string guildId)
 		{
 			var subscriptions = _context.YoutubeSubscriptions;
-			
+
 			var guildSubscriptions = subscriptions.Where(subscription => subscription.GuildIds.Contains(guildId));
 
 			var exists = await subscriptions.AnyAsync();
-			
+
 			return (exists, subscriptions);
 		}
 
@@ -165,6 +151,5 @@ namespace Notifications.Repositories
 
 			await _context.SaveChangesAsync();
 		}
-
 	}
 }

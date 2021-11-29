@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Cdn.Repositories;
-using Microsoft.Extensions.Logging;
 using Notifications.Repositories;
 
 namespace Notifications.Factories

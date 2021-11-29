@@ -12,7 +12,7 @@ namespace UnitTests.Cdn
 		{
 			_instance = instance;
 		}
-		
+
 		public MockCdnRepositoryFactory() {}
 
 		public ICdnRepository GetRepository()

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
-using System.Threading.Channels;
 using AngleSharp;
-using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +12,6 @@ using Notifications.Managers;
 using Notifications.Models;
 using Notifications.Repositories;
 using Notifications.Services;
-using Services;
 
 namespace Notifications
 {
@@ -48,10 +45,7 @@ namespace Notifications
 
 				var dnsUrl = Environment.GetEnvironmentVariable("SENTRY_URL");
 
-				if (dnsUrl is not null)
-				{
-					options.AddSentry(sentryOptions => sentryOptions.Dsn = dnsUrl);
-				}
+				if (dnsUrl is not null) options.AddSentry(sentryOptions => sentryOptions.Dsn = dnsUrl);
 			});
 		}
 

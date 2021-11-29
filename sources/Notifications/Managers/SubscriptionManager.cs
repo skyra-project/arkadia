@@ -2,14 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using System.Timers;
-using AngleSharp;
-using AngleSharp.Html.Dom;
-using Database;
 using Database.Models.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Notifications.Clients;
 using Notifications.Errors;
@@ -21,16 +16,14 @@ namespace Notifications.Managers
 {
 	public class SubscriptionManager
 	{
+		private readonly IChannelInfoRepository _channelInfoRepository;
+		private readonly IDateTimeRepository _dateTimeRepository;
 		private readonly ILogger<SubscriptionManager> _logger;
 		private readonly IPubSubClient _pubSubClient;
 		private readonly IYoutubeRepositoryFactory _repositoryFactory;
-		private readonly IChannelInfoRepository _channelInfoRepository;
-		private readonly IDateTimeRepository _dateTimeRepository;
 
-		public Timer ResubTimer { get; }
-		public Dictionary<string, DateTime> ResubscribeTimes { get; private set; } = new Dictionary<string, DateTime>();
-
-		public SubscriptionManager(IPubSubClient pubSubClient, ILogger<SubscriptionManager> logger, IYoutubeRepositoryFactory repositoryFactory, IChannelInfoRepository channelInfoRepository, IDateTimeRepository dateTimeRepository)
+		public SubscriptionManager(IPubSubClient pubSubClient, ILogger<SubscriptionManager> logger, IYoutubeRepositoryFactory repositoryFactory, IChannelInfoRepository channelInfoRepository,
+			IDateTimeRepository dateTimeRepository)
 		{
 			_pubSubClient = pubSubClient;
 			_logger = logger;
@@ -44,12 +37,14 @@ namespace Notifications.Managers
 			ResubTimer.Elapsed += ResubcriptionTimerOnElapsed;
 		}
 
+		public Timer ResubTimer { get; }
+		public Dictionary<string, DateTime> ResubscribeTimes { get; private set; } = new();
+
 		[ExcludeFromCodeCoverage(Justification = "Timer based methods are very difficult to test.")]
 		private async void ResubcriptionTimerOnElapsed(object _, ElapsedEventArgs args)
 		{
 			var cloned = new Dictionary<string, DateTime>(ResubscribeTimes);
 			foreach (var (channelId, value) in cloned)
-			{
 				if (DateTime.Now.AddMinutes(-10) >= value)
 				{
 					_logger.LogInformation("Resubscribing to channel {ChannelId}", channelId);
@@ -77,7 +72,6 @@ namespace Notifications.Managers
 
 					await repository.ModifyExpiryAsync(channelId, resubTime);
 				}
-			}
 		}
 
 		[ExcludeFromCodeCoverage(Justification = "Too simple to require a test.")]
@@ -85,7 +79,7 @@ namespace Notifications.Managers
 		{
 			await using var repository = _repositoryFactory.GetRepository();
 			var currentSubscriptions = repository.GetSubscriptions();
-			
+
 			ResubscribeTimes = currentSubscriptions.ToDictionary(sub => sub.Id, sub => sub.ExpiresAt);
 			ResubTimer.Start();
 		}
@@ -110,10 +104,7 @@ namespace Notifications.Managers
 		{
 			var (youtubeChannelId, _) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
 
-			if (youtubeChannelId is null)
-			{
-				return Result<bool>.FromError(new ChannelInfoRetrievalError());
-			}
+			if (youtubeChannelId is null) return Result<bool>.FromError(new ChannelInfoRetrievalError());
 
 			await using var repo = _repositoryFactory.GetRepository();
 
@@ -134,15 +125,9 @@ namespace Notifications.Managers
 		{
 			var isAlreadySubscribed = await IsSubscribedAsync(guildId, youtubeChannelUrl);
 
-			if (!isAlreadySubscribed.IsSuccess)
-			{
-				return Result.FromError(isAlreadySubscribed.Error);
-			}
+			if (!isAlreadySubscribed.IsSuccess) return Result.FromError(isAlreadySubscribed.Error);
 
-			if (isAlreadySubscribed.Entity)
-			{
-				return Result.FromSuccess();
-			}
+			if (isAlreadySubscribed.Entity) return Result.FromSuccess();
 
 			await using var repo = _repositoryFactory.GetRepository();
 
@@ -150,13 +135,10 @@ namespace Notifications.Managers
 
 			// ReSharper disable once MergeSequentialChecks
 			if (guild is null || guild.YoutubeUploadLiveChannel is null || guild.YoutubeUploadLiveMessage is null
-				|| guild.YoutubeUploadNotificationChannel is null || guild.YoutubeUploadNotificationMessage is null)
-			{
-				return Result.FromError(new UnconfiguredError());
-			}
+				|| guild.YoutubeUploadNotificationChannel is null || guild.YoutubeUploadNotificationMessage is null) return Result.FromError(new UnconfiguredError());
 
 			var (youtubeChannelId, youtubeChannelTitle) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
-			
+
 
 			var subscription = await GetSubscriptionAsync(youtubeChannelId!);
 
@@ -175,13 +157,10 @@ namespace Notifications.Managers
 				// we don't have any subscriptions, so let's make a new one
 				var subscriptionResult = await _pubSubClient.SubscribeAsync(youtubeChannelId!);
 
-				if (!subscriptionResult.IsSuccess)
-				{
-					return Result.FromError(subscriptionResult.Error);
-				}
+				if (!subscriptionResult.IsSuccess) return Result.FromError(subscriptionResult.Error);
 
 				var nowPlusFiveDays = _dateTimeRepository.GetTime().AddDays(5);
-				
+
 				await repo.AddSubscriptionAsync(youtubeChannelId!, nowPlusFiveDays, guildId, youtubeChannelTitle!);
 
 				ResubscribeTimes[youtubeChannelId!] = nowPlusFiveDays;
@@ -194,10 +173,7 @@ namespace Notifications.Managers
 		{
 			var (youtubeChannelId, _) = await _channelInfoRepository.GetChannelInfoAsync(youtubeChannelUrl);
 
-			if (youtubeChannelId is null)
-			{
-				return Result.FromError(new ChannelInfoRetrievalError());
-			}
+			if (youtubeChannelId is null) return Result.FromError(new ChannelInfoRetrievalError());
 
 			return await RemoveSubscriptionAsync(guildId, youtubeChannelId);
 		}
@@ -216,11 +192,8 @@ namespace Notifications.Managers
 				{
 					var result = await repo.RemoveGuildFromSubscriptionAsync(youtubeChannelId, guildId);
 
-					if (!result.IsSuccess)
-					{
-						return Result.FromError(result.Error);
-					}
-					
+					if (!result.IsSuccess) return Result.FromError(result.Error);
+
 					_logger.LogInformation("removed a subscription to {ChannelId} for {GuildId}", youtubeChannelId, guildId);
 				}
 				else
@@ -258,11 +231,8 @@ namespace Notifications.Managers
 			foreach (var subscription in subscriptions.ToArray())
 			{
 				var unsubscribeResult = await UnsubscribeAsync(guildId, subscription.Id);
-				
-				if (!unsubscribeResult.IsSuccess)
-				{
-					return Result.FromError(unsubscribeResult.Error);	
-				}
+
+				if (!unsubscribeResult.IsSuccess) return Result.FromError(unsubscribeResult.Error);
 			}
 
 			return Result.FromSuccess();
@@ -280,7 +250,7 @@ namespace Notifications.Managers
 			await using var repo = _repositoryFactory.GetRepository();
 
 			var subscription = await repo.GetSubscriptionByIdOrDefaultAsync(youtubeChannelId);
-			
+
 			if (subscription is null)
 			{
 				_logger.LogWarning("Subscription to channel with ID {ChannelId} not found when trying to add seen video with ID {VideoId}", youtubeChannelId, videoId);
@@ -316,7 +286,7 @@ namespace Notifications.Managers
 			subscription.ChannelTitle = youtubeChannelTitle;
 		}
 
-		
+
 		[ExcludeFromCodeCoverage(Justification = "To simple to test")]
 		public IEnumerable<YoutubeSubscription> GetAllSubscriptions(string guildId)
 		{

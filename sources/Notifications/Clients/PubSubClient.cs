@@ -10,7 +10,7 @@ using Remora.Results;
 namespace Notifications.Clients
 {
 	[ExcludeFromCodeCoverage(Justification = "Not testing an external API.")]
-	public partial class PubSubClient : IPubSubClient
+	public class PubSubClient : IPubSubClient
 	{
 		private readonly RequestCache _cache;
 		private readonly string _callbackUrl;
@@ -44,10 +44,7 @@ namespace Notifications.Clients
 
 			var status = await _httpClient.PostAsync(_pubSubUrl, formBody);
 
-			if (status.IsSuccessStatusCode)
-			{
-				return Result.FromSuccess();
-			}
+			if (status.IsSuccessStatusCode) return Result.FromSuccess();
 
 			_logger.LogError("Subscription request to pubsubhubbub failed: {Error}", await status.Content.ReadAsStringAsync());
 
@@ -66,6 +63,5 @@ namespace Notifications.Clients
 			var options = new FormUrlEncodedContent(collection);
 			return options;
 		}
-
 	}
 }
