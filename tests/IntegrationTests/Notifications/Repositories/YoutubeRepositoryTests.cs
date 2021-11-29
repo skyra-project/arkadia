@@ -541,7 +541,8 @@ namespace IntegrationTests.Notifications.Repositories
 
             // assert
 			
-			Assert.That(getResult.AlreadySeenIds, Has.Exactly(1).Items.EqualTo(videoId));
+			Assert.That(getResult, Is.Not.Null);
+			Assert.That(getResult!.AlreadySeenIds, Has.Exactly(1).Items.EqualTo(videoId));
         }
 
 		private Guild CreateDefaultGuild()
