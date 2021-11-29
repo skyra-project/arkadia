@@ -19,6 +19,7 @@ namespace Notifications.Controllers
 {
 	[ApiController]
 	[Route("notifications")]
+	[ExcludeFromCodeCoverage(Justification = "Not mocking the entire Youtube API to test.")]
 	public class PubSubResponseController : ControllerBase
 	{
 		private readonly YoutubeApiClient _apiClient;
@@ -27,8 +28,7 @@ namespace Notifications.Controllers
 		private readonly ConcurrentQueue<Notification> _notificationQueue;
 		private readonly DateTime _startupTime = DateTime.Now;
 		private readonly SubscriptionManager _subscriptionManager;
-
-		[ExcludeFromCodeCoverage(Justification = "Constructor that fills fields.")]
+		
 		public PubSubResponseController(ILogger<PubSubResponseController> logger, RequestCache cache, ConcurrentQueue<Notification> notificationQueue,
 			SubscriptionManager subscriptionManager, YoutubeApiClient apiClient)
 		{
