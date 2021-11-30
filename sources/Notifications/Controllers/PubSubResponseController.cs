@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,7 @@ namespace Notifications.Controllers
 {
 	[ApiController]
 	[Route("notifications")]
+	[ExcludeFromCodeCoverage(Justification = "Not mocking the entire Youtube API to test.")]
 	public class PubSubResponseController : ControllerBase
 	{
 		private readonly YoutubeApiClient _apiClient;
@@ -26,7 +28,7 @@ namespace Notifications.Controllers
 		private readonly ConcurrentQueue<Notification> _notificationQueue;
 		private readonly DateTime _startupTime = DateTime.Now;
 		private readonly SubscriptionManager _subscriptionManager;
-
+		
 		public PubSubResponseController(ILogger<PubSubResponseController> logger, RequestCache cache, ConcurrentQueue<Notification> notificationQueue,
 			SubscriptionManager subscriptionManager, YoutubeApiClient apiClient)
 		{
@@ -152,10 +154,7 @@ namespace Notifications.Controllers
 
 			var isLive = await _apiClient.IsVideoLiveAsync(videoId);
 
-			if (!isLive.IsSuccess)
-			{
-				_logger.LogError("Youtube API Client did not succeed in querying videos: {IsLiveError}", isLive.Error.Message);
-			}
+			if (!isLive.IsSuccess) _logger.LogError("Youtube API Client did not succeed in querying videos: {IsLiveError}", isLive.Error.Message);
 
 			_logger.LogTrace("Enqueuing video with ID {Id}", videoId);
 

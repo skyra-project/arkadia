@@ -6,7 +6,7 @@ namespace Notifications
 	public class RequestCache
 	{
 		private readonly ILogger<RequestCache> _logger;
-		private readonly Dictionary<string, bool> _requests = new Dictionary<string, bool>();
+		private readonly Dictionary<string, bool> _requests = new();
 
 		public RequestCache(ILogger<RequestCache> logger)
 		{
@@ -17,15 +17,9 @@ namespace Notifications
 		{
 			var isCorrect = _requests.TryGetValue(channelId, out var subscription) && subscription == isSubscription;
 
-			if (!isCorrect)
-			{
-				_logger.LogCritical("request with channel-id {Id} was not found in the request cache", channelId);
-			}
+			if (!isCorrect) _logger.LogCritical("request with channel-id {Id} was not found in the request cache", channelId);
 
-			if (remove)
-			{
-				RemoveRequest(channelId);
-			}
+			if (remove) RemoveRequest(channelId);
 
 			return isCorrect;
 		}

@@ -16,10 +16,7 @@ namespace IntegrationTests.Cdn.Repositories
 		{
 			await using var context = new ArkadiaDbContext();
 
-			foreach (var entry in context.CdnEntries)
-			{
-				context.Remove(entry);
-			}
+			foreach (var entry in context.CdnEntries) context.Remove(entry);
 
 			await context.SaveChangesAsync();
 		}
@@ -61,10 +58,10 @@ namespace IntegrationTests.Cdn.Repositories
 			// assert
 
 			Assert.IsNotNull(response);
-			Assert.AreEqual(name, response.Name);
-			Assert.AreEqual(etag, response.ETag);
-			Assert.AreEqual(contentType, response.ContentType);
-			Assert.AreEqual(updated, response.LastModifiedAt);
+			Assert.That(response!.Name, Is.EqualTo(name));
+			Assert.That(response.ETag, Is.EqualTo(etag));
+			Assert.That(response.ContentType, Is.EqualTo(contentType));
+			Assert.That(response.LastModifiedAt, Is.EqualTo(updated));
 		}
 
 		[Test]
@@ -87,10 +84,10 @@ namespace IntegrationTests.Cdn.Repositories
 			// assert
 
 			Assert.IsNotNull(response);
-			Assert.AreEqual(name, response.Name);
-			Assert.AreEqual(etag, response.ETag);
-			Assert.AreEqual(contentType, response.ContentType);
-			Assert.AreEqual(updated, response.LastModifiedAt);
+			Assert.That(response.Name, Is.EqualTo(name));
+			Assert.That(response.ETag, Is.EqualTo(etag));
+			Assert.That(response.ContentType, Is.EqualTo(contentType));
+			Assert.That(response.LastModifiedAt, Is.EqualTo(updated));
 		}
 
 		[Test]
@@ -118,10 +115,10 @@ namespace IntegrationTests.Cdn.Repositories
 
 			Assert.IsNotNull(firstResponse);
 			Assert.IsNotNull(secondResponse);
-			Assert.AreEqual(firstResponse.Id, secondResponse.Id);
-			Assert.AreEqual(newETag, secondResponse.ETag);
-			Assert.AreEqual(newContentType, secondResponse.ContentType);
-			Assert.AreEqual(newUpdated, secondResponse.LastModifiedAt);
+			Assert.That(secondResponse.Id, Is.EqualTo(firstResponse.Id));
+			Assert.That(secondResponse.ETag, Is.EqualTo(newETag));
+			Assert.That(secondResponse.ContentType, Is.EqualTo(newContentType));
+			Assert.That(secondResponse.LastModifiedAt, Is.EqualTo(newUpdated));
 		}
 
 		[Test]

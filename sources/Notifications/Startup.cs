@@ -2,14 +2,15 @@
 using System.Collections.Concurrent;
 using System.Net.Http;
 using AngleSharp;
-using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Notifications.Clients;
+using Notifications.Factories;
 using Notifications.Managers;
 using Notifications.Models;
+using Notifications.Repositories;
 using Notifications.Services;
 
 namespace Notifications
@@ -22,12 +23,14 @@ namespace Notifications
 		{
 			services.AddSingleton(new ConcurrentQueue<Notification>());
 			services.AddSingleton<YoutubeApiClient>();
-			services.AddSingleton<PubSubClient>();
+			services.AddSingleton<IPubSubClient, PubSubClient>();
 			services.AddSingleton<SubscriptionManager>();
 			services.AddSingleton<RequestCache>();
 			services.AddSingleton<HttpClient>();
-			services.AddSingleton<ArkadiaDbContext>();
+			services.AddSingleton<IYoutubeRepositoryFactory, DefaultYoutubeRepositoryFactory>();
 			services.AddSingleton(BrowsingContext.New(Configuration.Default.WithDefaultLoader()));
+			services.AddSingleton<IChannelInfoRepository, ChannelInfoRepository>();
+			services.AddSingleton<IDateTimeRepository, DateTimeRepository>();
 
 			services.AddGrpc();
 
@@ -42,10 +45,7 @@ namespace Notifications
 
 				var dnsUrl = Environment.GetEnvironmentVariable("SENTRY_URL");
 
-				if (dnsUrl is not null)
-				{
-					options.AddSentry(sentryOptions => sentryOptions.Dsn = dnsUrl);
-				}
+				if (dnsUrl is not null) options.AddSentry(sentryOptions => sentryOptions.Dsn = dnsUrl);
 			});
 		}
 

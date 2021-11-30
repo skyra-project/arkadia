@@ -47,19 +47,14 @@ namespace Cdn.Controllers
 
 			var cdnEntry = await repository.GetEntryByNameOrDefaultAsync(name);
 
-			if (cdnEntry is null)
-			{
-				return NotFound();
-			}
+			if (cdnEntry is null) return NotFound();
 
 			// RFC 7232 3.3 - If the content was not modified, a 304 "Not Modified" status should be sent.
 			if (!WasModified(cdnEntry, requestHeaders))
-			{
 				// RFC 7232 4.1 - The server generating a 304 response MUST generate any of the following header fields that
 				// would have been sent in a 200 (OK) response to the same request: Cache-Control, Content-Location, Date,
 				// ETag, Expires, and Vary.
 				return NotModified();
-			}
 
 			var fileLocation = Path.Join(_baseAssetLocation, cdnEntry.Id.ToString());
 
@@ -81,17 +76,11 @@ namespace Cdn.Controllers
 			bool WasModified(CdnEntry asset, RequestHeaders headers)
 			{
 				// RFC 7232 3.2 - If-None-Match
-				if (headers.IfNoneMatch.Any(entry => entry.Tag.Value == asset.ETag))
-				{
-					return false;
-				}
+				if (headers.IfNoneMatch.Any(entry => entry.Tag.Value == asset.ETag)) return false;
 
 				// RFC 7232 3.3 - If-Modified-Since
 				var ifModifiedSince = headers.IfModifiedSince;
-				if (!ifModifiedSince.HasValue)
-				{
-					return true;
-				}
+				if (!ifModifiedSince.HasValue) return true;
 
 				// The origin server SHOULD NOT perform the requested method if the selected representation's last
 				// // modification date is earlier than or equal to the date provided in the field-value

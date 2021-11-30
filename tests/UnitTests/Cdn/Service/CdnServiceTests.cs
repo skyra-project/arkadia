@@ -31,7 +31,7 @@ namespace UnitTests.Cdn.Service
 			var factory = new MockCdnRepositoryFactory(repository);
 			var fileSystem = new MockFileSystem();
 			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
-			
+
 			const string entryName = "test1";
 
 			var content = Encoding.UTF8.GetBytes("hello there");
@@ -54,8 +54,8 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.Ok, returnValue.Result);
-			Assert.AreEqual(content, returnValue.Content.ToByteArray());
+			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
+			Assert.That(returnValue.Content.ToByteArray(), Is.EqualTo(content));
 		}
 
 		[Test]
@@ -70,7 +70,7 @@ namespace UnitTests.Cdn.Service
 			var factory = new MockCdnRepositoryFactory(repository);
 			var fileSystem = new MockFileSystem();
 			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
-			
+
 			const string entryName = "test1";
 
 			var query = new GetRequest
@@ -84,7 +84,7 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.DoesNotExist, returnValue.Result);
+			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.DoesNotExist));
 		}
 
 		[Test]
@@ -97,7 +97,7 @@ namespace UnitTests.Cdn.Service
 			var factory = new MockCdnRepositoryFactory(repository);
 			var fileSystem = new MockFileSystem();
 			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
-			
+
 			const string entryName = "test1";
 
 			var query = new GetRequest
@@ -114,7 +114,7 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.Error, returnValue.Result);
+			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
 		}
 
 		[Test]
@@ -131,7 +131,7 @@ namespace UnitTests.Cdn.Service
 
 			const string entryName = "test1";
 			const string contentType = "test/new";
-			
+
 			var newContent = Encoding.UTF8.GetBytes("general kenobi");
 
 			var upsertQuery = new UpsertRequest
@@ -168,9 +168,9 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.Ok, upsertResult.Result);
-			Assert.AreEqual(CdnResult.Ok, getResult.Result);
-			Assert.AreEqual(newContent, getResult.Content.ToByteArray());
+			Assert.That(upsertResult.Result, Is.EqualTo(CdnResult.Ok));
+			Assert.That(getResult.Result, Is.EqualTo(CdnResult.Ok));
+			Assert.That(getResult.Content.ToByteArray(), Is.EqualTo(newContent));
 		}
 
 		[Test]
@@ -183,7 +183,7 @@ namespace UnitTests.Cdn.Service
 			var factory = new MockCdnRepositoryFactory(repository);
 			var fileSystem = new MockFileSystem();
 			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
-			
+
 			const string entryName = "test1";
 
 			var content = Encoding.UTF8.GetBytes("hello there");
@@ -208,9 +208,9 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.Ok, returnValue.Result);
-			Assert.IsFalse(existsOnDisk);
-			Assert.IsFalse(existsOnDb);
+			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
+			Assert.That(existsOnDisk, Is.False);
+			Assert.That(existsOnDb, Is.False);
 		}
 
 		[Test]
@@ -237,7 +237,7 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.DoesNotExist, returnValue.Result);
+			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.DoesNotExist));
 		}
 
 		[Test]
@@ -250,7 +250,7 @@ namespace UnitTests.Cdn.Service
 			var factory = new MockCdnRepositoryFactory(repository);
 			var fileSystem = new MockFileSystem();
 			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
-			
+
 			const string entryName = "test1";
 
 			var query = new DeleteRequest
@@ -266,7 +266,7 @@ namespace UnitTests.Cdn.Service
 
 			// assert
 
-			Assert.AreEqual(CdnResult.Error, returnValue.Result);
+			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
 		}
 	}
 }

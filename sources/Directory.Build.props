@@ -1,5 +1,7 @@
 <Project>
 
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
+
     <!-- We add InternalsVisibleTo to every project, making sure *Tests can see internals. -->
 
     <ItemGroup>

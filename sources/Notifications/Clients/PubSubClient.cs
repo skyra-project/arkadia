@@ -4,11 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Notifications.Errors;
 using Remora.Results;
 
 namespace Notifications.Clients
 {
-	public class PubSubClient
+	[ExcludeFromCodeCoverage(Justification = "Not testing an external API.")]
+	public class PubSubClient : IPubSubClient
 	{
 		private readonly RequestCache _cache;
 		private readonly string _callbackUrl;
@@ -42,10 +44,7 @@ namespace Notifications.Clients
 
 			var status = await _httpClient.PostAsync(_pubSubUrl, formBody);
 
-			if (status.IsSuccessStatusCode)
-			{
-				return Result.FromSuccess();
-			}
+			if (status.IsSuccessStatusCode) return Result.FromSuccess();
 
 			_logger.LogError("Subscription request to pubsubhubbub failed: {Error}", await status.Content.ReadAsStringAsync());
 
@@ -63,12 +62,6 @@ namespace Notifications.Clients
 
 			var options = new FormUrlEncodedContent(collection);
 			return options;
-		}
-
-		[ExcludeFromCodeCoverage]
-		public class PubSubHubBubError : IResultError
-		{
-			public string Message => "";
 		}
 	}
 }

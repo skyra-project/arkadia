@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Cdn.Repositories;
 using Database.Models.Entities;
 
-namespace UnitTests.Cdn.Service
+namespace UnitTests.Cdn
 {
 	public class MockCdnRepository : ICdnRepository
 	{
 
-		private readonly List<CdnEntry> _entries = new List<CdnEntry>();
+		private readonly List<CdnEntry> _entries = new();
 
 		public ValueTask DisposeAsync()
 		{
@@ -54,10 +54,7 @@ namespace UnitTests.Cdn.Service
 		{
 			var entry = await GetEntryByNameOrDefaultAsync(name);
 
-			if (entry is not null)
-			{
-				_entries.Remove(entry);
-			}
+			if (entry is not null) _entries.Remove(entry);
 
 			return entry;
 		}

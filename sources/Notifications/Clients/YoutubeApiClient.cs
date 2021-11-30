@@ -10,6 +10,7 @@ using Shared.Extensions;
 
 namespace Notifications.Clients
 {
+	[ExcludeFromCodeCoverage(Justification = "Not testing an external API.")]
 	public class YoutubeApiClient
 	{
 		private const string ApiUrl = "https://youtube.googleapis.com/youtube/v3/videos";
@@ -38,10 +39,7 @@ namespace Notifications.Clients
 				var body = await result.Content.ReadAsStreamAsync();
 				var response = await JsonSerializer.DeserializeAsync<YoutubeApiResponse>(body);
 
-				if (response is null)
-				{
-					return Result<bool>.FromError(new YoutubeApiError("Body was not as expected."));
-				}
+				if (response is null) return Result<bool>.FromError(new YoutubeApiError("Body was not as expected."));
 
 				return Result<bool>.FromSuccess(response.IsLive);
 			}
