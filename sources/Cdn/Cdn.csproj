@@ -11,7 +11,7 @@
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.39.0"/>
         <PackageReference Include="Sentry.Extensions.Logging" Version="3.9.3"/>
-        <PackageReference Include="System.IO.Abstractions" Version="13.2.47"/>
+        <PackageReference Include="System.IO.Abstractions" Version="14.0.13"/>
     </ItemGroup>
 
     <ItemGroup>
