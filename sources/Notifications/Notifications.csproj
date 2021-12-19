@@ -12,7 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Cdn\Cdn.csproj"/>
         <ProjectReference Include="..\Database\Database.csproj"/>
     </ItemGroup>
 

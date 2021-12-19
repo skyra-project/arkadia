@@ -7,7 +7,7 @@ WORKDIR /skyra/app
 COPY sources .
 COPY Directory.Build.props .
 
-RUN dotnet publish Cdn -r linux-x64 -p:PublishSingleFile=true -p:DebugType=None --self-contained true -c Release -o out
+RUN dotnet publish Cdn -p:PublishTrimmed=true -p:PublishSingleFile=true -p:DebugType=None -r linux-x64 --self-contained -c Release -o out
 
 # ================ #
 #   Runner Stage   #
