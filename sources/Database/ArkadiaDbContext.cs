@@ -50,7 +50,7 @@ public class ArkadiaDbContext : DbContext
 		var name = Environment.GetEnvironmentVariable("POSTGRES_DB") ?? "arkadia";
 
 		optionsBuilder.UseNpgsql(
-			$"User ID={user};Password={password};Server={host};Port={port};Database={name};Pooling=true;",
+			$"username={user};password={password};host={host};port={port};database={name};pooling=true;",
 			options => options.EnableRetryOnFailure()).UseSnakeCaseNamingConvention();
 	}
 }
