@@ -4,7 +4,8 @@ COPY --from=ghcr.io/skyra-project/grpc-protofiles:latest . .
 
 WORKDIR /skyra/app
 
-COPY sources ./
+COPY sources .
+COPY Directory.Build.props .
 
 RUN dotnet publish Cdn -r linux-x64 -p:PublishSingleFile=true -p:DebugType=None --self-contained true -c Release -o out
 
