@@ -36,6 +36,10 @@ public class Startup
 	{
 		app.UseRouting();
 
-		app.UseEndpoints(endpoints => { endpoints.MapGrpcService<CdnService>(); });
+		app.UseEndpoints(endpoints =>
+		{
+			endpoints.MapGrpcService<CdnService>();
+			endpoints.MapControllers();
+		});
 	}
 }

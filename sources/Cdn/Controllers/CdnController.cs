@@ -17,7 +17,6 @@ namespace Cdn.Controllers;
 
 [ExcludeFromCodeCoverage(Justification = "Too complex to mock.")]
 [ApiController]
-[Route("[controller]")]
 public class CdnController : ControllerBase
 {
 	private const int Seconds = 60;
