@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace Notifications.Repositories
+namespace Notifications.Repositories;
+
+public interface IDateTimeRepository
 {
-	public interface IDateTimeRepository
-	{
-		DateTime GetTime();
-	}
+	DateTime GetTime();
 }

@@ -1,9 +1,8 @@
 ﻿using Remora.Results;
 
-namespace Notifications.Errors
+namespace Notifications.Errors;
+
+public class MissingGuildError : IResultError
 {
-	public class MissingGuildError : IResultError
-	{
-		public string Message => "Guild does not exist.";
-	}
+	public string Message => "Guild does not exist.";
 }

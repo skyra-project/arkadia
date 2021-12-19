@@ -1,14 +1,13 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Notifications.Repositories;
 
-namespace Notifications.Factories
+namespace Notifications.Factories;
+
+[ExcludeFromCodeCoverage]
+public class DefaultYoutubeRepositoryFactory : IYoutubeRepositoryFactory
 {
-	[ExcludeFromCodeCoverage]
-	public class DefaultYoutubeRepositoryFactory : IYoutubeRepositoryFactory
+	public IYoutubeRepository GetRepository()
 	{
-		public IYoutubeRepository GetRepository()
-		{
-			return new YoutubeRepository();
-		}
+		return new YoutubeRepository();
 	}
 }

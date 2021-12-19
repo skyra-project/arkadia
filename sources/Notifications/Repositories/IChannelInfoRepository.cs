@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace Notifications.Repositories
+namespace Notifications.Repositories;
+
+public interface IChannelInfoRepository
 {
-	public interface IChannelInfoRepository
-	{
-		Task<(string?, string?)> GetChannelInfoAsync(string channelUrl);
-	}
+	Task<(string?, string?)> GetChannelInfoAsync(string channelUrl);
 }

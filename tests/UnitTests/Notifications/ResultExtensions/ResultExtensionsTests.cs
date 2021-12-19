@@ -5,75 +5,70 @@ using NUnit.Framework;
 using Remora.Results;
 using Services;
 
-namespace UnitTests.Notifications.ResultExtensions
+namespace UnitTests.Notifications.ResultExtensions;
+
+[TestFixture]
+[Parallelizable]
+public class ResultExtensionsTests
 {
-	[TestFixture]
-	[Parallelizable]
-	public class ResultExtensionsTests
+	[Test]
+	public void ResultExtension_ReturnsSuccessfulResponse_WhenResultIsSuccess()
 	{
-		[Test]
-		public void ResultExtension_ReturnsSuccessfulResponse_WhenResultIsSuccess()
-		{
+		// arrange
 
-			// arrange
+		var result = Result.FromSuccess();
 
-			var result = Result.FromSuccess();
+		// act
 
-			// act
+		var youtubeResult = result.AsYoutubeServiceResponse();
 
-			var youtubeResult = result.AsYoutubeServiceResponse();
+		// assert
 
-			// assert
+		Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.Success));
+	}
 
-			Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.Success));
-		}
+	[Test]
+	public void ResultExtension_ReturnsNotConfigured_WhenErrorIsUnconfiguredError()
+	{
+		// arrange
 
-		[Test]
-		public void ResultExtension_ReturnsNotConfigured_WhenErrorIsUnconfiguredError()
-		{
+		var result = Result.FromError(new UnconfiguredError());
 
-			// arrange
+		// act
 
-			var result = Result.FromError(new UnconfiguredError());
+		var youtubeResult = result.AsYoutubeServiceResponse();
 
-			// act
+		// assert
 
-			var youtubeResult = result.AsYoutubeServiceResponse();
+		Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.NotConfigured));
+	}
 
-			// assert
+	[Test]
+	public void ResultExtension_ReturnsIncorrectChannelInfo_WhenErrorIsChannelInfoRetrievalError()
+	{
+		// arrange
 
-			Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.NotConfigured));
-		}
+		var result = Result.FromError(new ChannelInfoRetrievalError());
 
-		[Test]
-		public void ResultExtension_ReturnsIncorrectChannelInfo_WhenErrorIsChannelInfoRetrievalError()
-		{
+		// act
 
-			// arrange
+		var youtubeResult = result.AsYoutubeServiceResponse();
 
-			var result = Result.FromError(new ChannelInfoRetrievalError());
+		// assert
 
-			// act
+		Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.IncorrectChannelInfo));
+	}
 
-			var youtubeResult = result.AsYoutubeServiceResponse();
+	[Test]
+	public void ResultExtension_ThrowsArgumentException_WhenErrorIsUnknown()
+	{
+		// arrange
 
-			// assert
+		var result = Result.FromError(new ArgumentNullError("test"));
 
-			Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.IncorrectChannelInfo));
-		}
+		// assert
 
-		[Test]
-		public void ResultExtension_ThrowsArgumentException_WhenErrorIsUnknown()
-		{
-
-			// arrange
-
-			var result = Result.FromError(new ArgumentNullError("test"));
-
-			// assert
-
-			Assert.Throws(Is.TypeOf<ArgumentOutOfRangeException>(),
-				delegate { result.AsYoutubeServiceResponse(); });
-		}
+		Assert.Throws(Is.TypeOf<ArgumentOutOfRangeException>(),
+			delegate { result.AsYoutubeServiceResponse(); });
 	}
 }

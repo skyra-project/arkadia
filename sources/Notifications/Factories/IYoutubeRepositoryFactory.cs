@@ -1,9 +1,8 @@
 ﻿using Notifications.Repositories;
 
-namespace Notifications.Factories
+namespace Notifications.Factories;
+
+public interface IYoutubeRepositoryFactory
 {
-	public interface IYoutubeRepositoryFactory
-	{
-		IYoutubeRepository GetRepository();
-	}
+	IYoutubeRepository GetRepository();
 }

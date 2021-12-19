@@ -1,11 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Remora.Results;
 
-namespace Notifications.Clients
+namespace Notifications.Clients;
+
+public interface IPubSubClient
 {
-	public interface IPubSubClient
-	{
-		Task<Result> SubscribeAsync(string channelId);
-		Task<Result> UnsubscribeAsync(string channelId);
-	}
+	Task<Result> SubscribeAsync(string channelId);
+	Task<Result> UnsubscribeAsync(string channelId);
 }

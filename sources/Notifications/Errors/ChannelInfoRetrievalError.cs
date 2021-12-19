@@ -1,9 +1,8 @@
 ﻿using Remora.Results;
 
-namespace Notifications.Errors
+namespace Notifications.Errors;
+
+public class ChannelInfoRetrievalError : IResultError
 {
-	public class ChannelInfoRetrievalError : IResultError
-	{
-		public string Message => "Error fetching channel information.";
-	}
+	public string Message => "Error fetching channel information.";
 }
