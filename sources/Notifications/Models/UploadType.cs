@@ -1,8 +1,7 @@
-﻿namespace Notifications.Models
+﻿namespace Notifications.Models;
+
+public enum UploadType
 {
-	public enum UploadType
-	{
-		Upload,
-		Live
-	}
+	Upload,
+	Live
 }

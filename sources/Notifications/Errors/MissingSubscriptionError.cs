@@ -1,9 +1,8 @@
 ﻿using Remora.Results;
 
-namespace Notifications.Errors
+namespace Notifications.Errors;
+
+public class MissingSubscriptionError : IResultError
 {
-	public class MissingSubscriptionError : IResultError
-	{
-		public string Message => "Subscription does not exist.";
-	}
+	public string Message => "Subscription does not exist.";
 }

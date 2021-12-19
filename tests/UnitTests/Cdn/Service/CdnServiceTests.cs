@@ -8,265 +8,263 @@ using NUnit.Framework;
 using Services;
 using CdnService = Cdn.Services.CdnService;
 
-namespace UnitTests.Cdn.Service
+namespace UnitTests.Cdn.Service;
+
+[TestFixture]
+[Parallelizable]
+public class CdnServiceTests
 {
-	[TestFixture]
-	[Parallelizable]
-	public class CdnServiceTests
+	[OneTimeSetUp]
+	public void Setup()
 	{
+		Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
+	}
 
-		[OneTimeSetUp]
-		public void Setup()
+	[Test]
+	public async Task CdnService_Get_ShouldReturnItem_WhenExists()
+	{
+		// arrange
+
+		await using var repository = new MockCdnRepository();
+
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+
+		const string entryName = "test1";
+
+		var content = Encoding.UTF8.GetBytes("hello there");
+
+		var query = new GetRequest
 		{
-			Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
-		}
+			Name = entryName
+		};
 
-		[Test]
-		public async Task CdnService_Get_ShouldReturnItem_WhenExists()
+		// act
+
+		var entity = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
+		var id = entity.Id;
+
+		var path = $"assets/{id}";
+		fileSystem.Directory.CreateDirectory("assets");
+		await fileSystem.File.WriteAllBytesAsync(path, content);
+
+		var returnValue = await service.Get(query, null!);
+
+		// assert
+
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(returnValue.Content.ToByteArray(), Is.EqualTo(content));
+	}
+
+	[Test]
+	public async Task CdnService_Get_ShouldReturnDoesNotExist_WhenDoesNotExist()
+	{
+		// arrange
+
+		Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
+
+		await using var repository = new MockCdnRepository();
+
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+
+		const string entryName = "test1";
+
+		var query = new GetRequest
 		{
-			// arrange
+			Name = entryName
+		};
 
-			await using var repository = new MockCdnRepository();
+		// act
 
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+		var returnValue = await service.Get(query, null!);
 
-			const string entryName = "test1";
+		// assert
 
-			var content = Encoding.UTF8.GetBytes("hello there");
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.DoesNotExist));
+	}
 
-			var query = new GetRequest
-			{
-				Name = entryName
-			};
+	[Test]
+	public async Task CdnService_Get_ShouldReturnError_WhenExists_ButFileDoesNot()
+	{
+		// arrange
 
-			// act
+		await using var repository = new MockCdnRepository();
 
-			var entity = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
-			var id = entity.Id;
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
 
-			var path = $"assets/{id}";
-			fileSystem.Directory.CreateDirectory("assets");
-			await fileSystem.File.WriteAllBytesAsync(path, content);
+		const string entryName = "test1";
 
-			var returnValue = await service.Get(query, null!);
-
-			// assert
-
-			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
-			Assert.That(returnValue.Content.ToByteArray(), Is.EqualTo(content));
-		}
-
-		[Test]
-		public async Task CdnService_Get_ShouldReturnDoesNotExist_WhenDoesNotExist()
+		var query = new GetRequest
 		{
-			// arrange
+			Name = entryName
+		};
 
-			Environment.SetEnvironmentVariable("BASE_ASSET_LOCATION", "/assets");
+		// act
 
-			await using var repository = new MockCdnRepository();
+		var entity = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
+		var id = entity.Id;
 
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+		var returnValue = await service.Get(query, null!);
 
-			const string entryName = "test1";
+		// assert
 
-			var query = new GetRequest
-			{
-				Name = entryName
-			};
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
+	}
 
-			// act
+	[Test]
+	public async Task CdnService_Upsert_ShouldEditItem_WhenExists()
+	{
+		// arrange
 
-			var returnValue = await service.Get(query, null!);
+		await using var repository = new MockCdnRepository();
 
-			// assert
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
 
-			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.DoesNotExist));
-		}
 
-		[Test]
-		public async Task CdnService_Get_ShouldReturnError_WhenExists_ButFileDoesNot()
+		const string entryName = "test1";
+		const string contentType = "test/new";
+
+		var newContent = Encoding.UTF8.GetBytes("general kenobi");
+
+		var upsertQuery = new UpsertRequest
 		{
-			// arrange
+			Name = entryName,
+			Content = ByteString.CopyFrom(newContent),
+			ContentType = contentType
+		};
 
-			await using var repository = new MockCdnRepository();
-
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
-
-			const string entryName = "test1";
-
-			var query = new GetRequest
-			{
-				Name = entryName
-			};
-
-			// act
-
-			var entity = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
-			var id = entity.Id;
-
-			var returnValue = await service.Get(query, null!);
-
-			// assert
-
-			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
-		}
-
-		[Test]
-		public async Task CdnService_Upsert_ShouldEditItem_WhenExists()
+		var getQuery = new GetRequest
 		{
-			// arrange
+			Name = entryName
+		};
 
-			await using var repository = new MockCdnRepository();
+		// act
 
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+		// insert the first entry
+		await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
 
+		var entity = await repository.GetEntryByNameOrDefaultAsync(entryName);
 
-			const string entryName = "test1";
-			const string contentType = "test/new";
+		// write the first entry to the 'file system'
 
-			var newContent = Encoding.UTF8.GetBytes("general kenobi");
+		var id = entity!.Id;
+		var path = $"assets/{id}";
 
-			var upsertQuery = new UpsertRequest
-			{
-				Name = entryName,
-				Content = ByteString.CopyFrom(newContent),
-				ContentType = contentType
-			};
+		fileSystem.Directory.CreateDirectory("assets");
+		await fileSystem.File.WriteAllBytesAsync(path, newContent);
 
-			var getQuery = new GetRequest
-			{
-				Name = entryName
-			};
+		// perform the queries
 
-			// act
+		var upsertResult = await service.Upsert(upsertQuery, null!);
+		var getResult = await service.Get(getQuery, null!);
 
-			// insert the first entry
-			await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
+		// assert
 
-			var entity = await repository.GetEntryByNameOrDefaultAsync(entryName);
+		Assert.That(upsertResult.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(getResult.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(getResult.Content.ToByteArray(), Is.EqualTo(newContent));
+	}
 
-			// write the first entry to the 'file system'
+	[Test]
+	public async Task CdnService_Delete_ShouldDelete_WhenExists()
+	{
+		// arrange
 
-			var id = entity!.Id;
-			var path = $"assets/{id}";
+		await using var repository = new MockCdnRepository();
 
-			fileSystem.Directory.CreateDirectory("assets");
-			await fileSystem.File.WriteAllBytesAsync(path, newContent);
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
 
-			// perform the queries
+		const string entryName = "test1";
 
-			var upsertResult = await service.Upsert(upsertQuery, null!);
-			var getResult = await service.Get(getQuery, null!);
+		var content = Encoding.UTF8.GetBytes("hello there");
 
-			// assert
-
-			Assert.That(upsertResult.Result, Is.EqualTo(CdnResult.Ok));
-			Assert.That(getResult.Result, Is.EqualTo(CdnResult.Ok));
-			Assert.That(getResult.Content.ToByteArray(), Is.EqualTo(newContent));
-		}
-
-		[Test]
-		public async Task CdnService_Delete_ShouldDelete_WhenExists()
+		var query = new DeleteRequest
 		{
-			// arrange
+			Name = entryName
+		};
 
-			await using var repository = new MockCdnRepository();
+		// act
 
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+		var entity = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
+		var id = entity.Id;
 
-			const string entryName = "test1";
+		var path = $"assets/{id}";
+		fileSystem.Directory.CreateDirectory("assets");
+		await fileSystem.File.WriteAllBytesAsync(path, content);
 
-			var content = Encoding.UTF8.GetBytes("hello there");
+		var returnValue = await service.Delete(query, null!);
+		var existsOnDisk = fileSystem.File.Exists(path);
+		var existsOnDb = await repository.GetEntryByNameOrDefaultAsync(entryName) is not null;
 
-			var query = new DeleteRequest
-			{
-				Name = entryName
-			};
+		// assert
 
-			// act
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(existsOnDisk, Is.False);
+		Assert.That(existsOnDb, Is.False);
+	}
 
-			var entity = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
-			var id = entity.Id;
+	[Test]
+	public async Task CdnService_Delete_ShouldReturnDoesNotExist_WhenDoesNotExistInDatabase()
+	{
+		// arrange
 
-			var path = $"assets/{id}";
-			fileSystem.Directory.CreateDirectory("assets");
-			await fileSystem.File.WriteAllBytesAsync(path, content);
+		await using var repository = new MockCdnRepository();
 
-			var returnValue = await service.Delete(query, null!);
-			var existsOnDisk = fileSystem.File.Exists(path);
-			var existsOnDb = await repository.GetEntryByNameOrDefaultAsync(entryName) is not null;
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
 
-			// assert
+		const string entryName = "test1";
 
-			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
-			Assert.That(existsOnDisk, Is.False);
-			Assert.That(existsOnDb, Is.False);
-		}
-
-		[Test]
-		public async Task CdnService_Delete_ShouldReturnDoesNotExist_WhenDoesNotExistInDatabase()
+		var query = new DeleteRequest
 		{
-			// arrange
+			Name = entryName
+		};
 
-			await using var repository = new MockCdnRepository();
+		// act
 
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+		var returnValue = await service.Delete(query, null!);
 
-			const string entryName = "test1";
+		// assert
 
-			var query = new DeleteRequest
-			{
-				Name = entryName
-			};
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.DoesNotExist));
+	}
 
-			// act
+	[Test]
+	public async Task CdnService_Delete_ShouldReturnError_WhenFileDoesNotExist()
+	{
+		// arrange
 
-			var returnValue = await service.Delete(query, null!);
+		await using var repository = new MockCdnRepository();
 
-			// assert
+		var factory = new MockCdnRepositoryFactory(repository);
+		var fileSystem = new MockFileSystem();
+		var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
 
-			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.DoesNotExist));
-		}
+		const string entryName = "test1";
 
-		[Test]
-		public async Task CdnService_Delete_ShouldReturnError_WhenFileDoesNotExist()
+		var query = new DeleteRequest
 		{
-			// arrange
+			Name = entryName
+		};
 
-			await using var repository = new MockCdnRepository();
+		// act
 
-			var factory = new MockCdnRepositoryFactory(repository);
-			var fileSystem = new MockFileSystem();
-			var service = new CdnService(new NullLogger<CdnService>(), fileSystem, factory);
+		var _ = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
 
-			const string entryName = "test1";
+		var returnValue = await service.Delete(query, null!);
 
-			var query = new DeleteRequest
-			{
-				Name = entryName
-			};
+		// assert
 
-			// act
-
-			var _ = await repository.UpsertEntryAsync(entryName, "test/default", "test_tag", DateTime.Now);
-
-			var returnValue = await service.Delete(query, null!);
-
-			// assert
-
-			Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
-		}
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
 	}
 }

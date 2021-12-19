@@ -2,71 +2,65 @@
 using Notifications;
 using NUnit.Framework;
 
-namespace UnitTests.Notifications
+namespace UnitTests.Notifications;
+
+[TestFixture]
+[Parallelizable]
+public class RequestCacheTests
 {
-	[TestFixture]
-	[Parallelizable]
-	public class RequestCacheTests
+	[Test]
+	public void RequestCache_GetRequest_ShouldReturnFalse_WhenRequestDoesNotExist()
 	{
-		[Test]
-		public void RequestCache_GetRequest_ShouldReturnFalse_WhenRequestDoesNotExist()
-		{
+		// arrange
 
-			// arrange
+		var cache = new RequestCache(new NullLogger<RequestCache>());
+		var requestId = "test";
+		var subscription = false;
 
-			var cache = new RequestCache(new NullLogger<RequestCache>());
-			var requestId = "test";
-			var subscription = false;
+		// act
 
-			// act
+		var response = cache.GetRequest(requestId, subscription);
 
-			var response = cache.GetRequest(requestId, subscription);
+		// assert
 
-			// assert
+		Assert.That(response, Is.False);
+	}
 
-			Assert.That(response, Is.False);
+	[Test]
+	public void RequestCache_GetRequest_ShouldReturnFalse_WhenRequestDoesExist_ButHasDifferentValue()
+	{
+		// arrange
 
-		}
+		var cache = new RequestCache(new NullLogger<RequestCache>());
+		var requestId = "test";
+		var subscription = false;
 
-		[Test]
-		public void RequestCache_GetRequest_ShouldReturnFalse_WhenRequestDoesExist_ButHasDifferentValue()
-		{
+		// act
 
-			// arrange
+		cache.AddRequest(requestId, !subscription);
+		var response = cache.GetRequest(requestId, subscription);
 
-			var cache = new RequestCache(new NullLogger<RequestCache>());
-			var requestId = "test";
-			var subscription = false;
+		// assert
 
-			// act
+		Assert.That(response, Is.False);
+	}
 
-			cache.AddRequest(requestId, !subscription);
-			var response = cache.GetRequest(requestId, subscription);
+	[Test]
+	public void RequestCache_GetRequest_ShouldReturnTrue_WhenRequestDoesExist()
+	{
+		// arrange
 
-			// assert
+		var cache = new RequestCache(new NullLogger<RequestCache>());
+		var requestId = "test";
+		var subscription = false;
 
-			Assert.That(response, Is.False);
+		// act
 
-		}
+		cache.AddRequest(requestId, subscription);
+		var response = cache.GetRequest(requestId, subscription);
 
-		[Test]
-		public void RequestCache_GetRequest_ShouldReturnTrue_WhenRequestDoesExist()
-		{
+		// assert
 
-			// arrange
-
-			var cache = new RequestCache(new NullLogger<RequestCache>());
-			var requestId = "test";
-			var subscription = false;
-
-			// act
-
-			cache.AddRequest(requestId, subscription);
-			var response = cache.GetRequest(requestId, subscription);
-
-			// assert
-
-			Assert.That(response, Is.True);
-		}
+		Assert.That(response, Is.True);
 	}
 }

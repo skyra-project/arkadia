@@ -2,21 +2,21 @@
 using Cdn.Repositories;
 using Microsoft.Extensions.Logging;
 
-namespace Cdn.Factories
+namespace Cdn.Factories;
+
+[ExcludeFromCodeCoverage]
+public class DefaultCdnRepositoryFactory : ICdnRepositoryFactory
 {
-	[ExcludeFromCodeCoverage]
-	public class DefaultCdnRepositoryFactory : ICdnRepositoryFactory
+	private readonly ILogger<CdnRepository> _logger;
+
+	// ReSharper disable once ContextualLoggerProblem
+	public DefaultCdnRepositoryFactory(ILogger<CdnRepository> logger)
 	{
-		private readonly ILogger<CdnRepository> _logger;
+		_logger = logger;
+	}
 
-		public DefaultCdnRepositoryFactory(ILogger<CdnRepository> logger)
-		{
-			_logger = logger;
-		}
-
-		public ICdnRepository GetRepository()
-		{
-			return new CdnRepository(_logger);
-		}
+	public ICdnRepository GetRepository()
+	{
+		return new CdnRepository(_logger);
 	}
 }

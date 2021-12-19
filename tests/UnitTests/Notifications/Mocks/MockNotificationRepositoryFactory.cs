@@ -1,23 +1,23 @@
 ﻿using Notifications.Factories;
 using Notifications.Repositories;
 
-namespace UnitTests.Notifications.Mocks
+namespace UnitTests.Notifications.Mocks;
+
+public class MockNotificationRepositoryFactory : IYoutubeRepositoryFactory
 {
-	public class MockNotificationRepositoryFactory : IYoutubeRepositoryFactory
+	private readonly IYoutubeRepository? _instance;
+
+	public MockNotificationRepositoryFactory(IYoutubeRepository instance)
 	{
+		_instance = instance;
+	}
 
-		private readonly IYoutubeRepository? _instance;
+	public MockNotificationRepositoryFactory()
+	{
+	}
 
-		public MockNotificationRepositoryFactory(IYoutubeRepository instance)
-		{
-			_instance = instance;
-		}
-
-		public MockNotificationRepositoryFactory() {}
-
-		public IYoutubeRepository GetRepository()
-		{
-			return _instance ?? new MockNotificationRepository();
-		}
+	public IYoutubeRepository GetRepository()
+	{
+		return _instance ?? new MockNotificationRepository();
 	}
 }

@@ -6,71 +6,71 @@ using Database.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Cdn.Repositories
+namespace Cdn.Repositories;
+
+public class CdnRepository : ICdnRepository
 {
-	public class CdnRepository : ICdnRepository
+	private readonly ArkadiaDbContext _context = new();
+	private readonly ILogger<CdnRepository> _logger;
+
+	public CdnRepository(ILogger<CdnRepository> logger)
 	{
-		private readonly ArkadiaDbContext _context = new();
-		private readonly ILogger<CdnRepository> _logger;
+		_logger = logger;
+	}
 
-		public CdnRepository(ILogger<CdnRepository> logger)
+	[ExcludeFromCodeCoverage]
+	public ValueTask DisposeAsync()
+	{
+		return _context.DisposeAsync();
+	}
+
+	public Task<CdnEntry?> GetEntryByNameOrDefaultAsync(string name)
+	{
+		return _context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == name);
+	}
+
+	public async ValueTask<CdnEntry> UpsertEntryAsync(string name, string contentType, string eTag,
+		DateTime lastModifiedAt)
+	{
+		var entry = await GetEntryByNameOrDefaultAsync(name);
+
+		if (entry is null) // insert
 		{
-			_logger = logger;
-		}
-
-		[ExcludeFromCodeCoverage]
-		public ValueTask DisposeAsync()
-		{
-			return _context.DisposeAsync();
-		}
-
-		public Task<CdnEntry?> GetEntryByNameOrDefaultAsync(string name)
-		{
-			return _context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == name);
-		}
-
-		public async ValueTask<CdnEntry> UpsertEntryAsync(string name, string contentType, string eTag, DateTime lastModifiedAt)
-		{
-			var entry = await GetEntryByNameOrDefaultAsync(name);
-
-			if (entry is null) // insert
+			var entryEntity = await _context.CdnEntries.AddAsync(new CdnEntry
 			{
-				var entryEntity = await _context.CdnEntries.AddAsync(new CdnEntry
-				{
-					Name = name,
-					ContentType = contentType,
-					ETag = eTag,
-					LastModifiedAt = lastModifiedAt
-				});
+				Name = name,
+				ContentType = contentType,
+				ETag = eTag,
+				LastModifiedAt = lastModifiedAt
+			});
 
-				entry = entryEntity.Entity;
+			entry = entryEntity.Entity;
 
-				_logger.LogTrace("Creating new entry with name {Name}", name);
-			}
-			else // update
-			{
-				entry.ContentType = contentType;
-				entry.LastModifiedAt = lastModifiedAt;
-				entry.ETag = eTag;
+			_logger.LogTrace("Creating new entry with name {Name}", name);
+		}
+		else // update
+		{
+			entry.ContentType = contentType;
+			entry.LastModifiedAt = lastModifiedAt;
+			entry.ETag = eTag;
 
-				_logger.LogTrace("Updating entry with name {Name}", name);
-			}
+			_logger.LogTrace("Updating entry with name {Name}", name);
+		}
 
+		await _context.SaveChangesAsync();
+		return entry;
+	}
+
+	public async ValueTask<CdnEntry?> DeleteEntryAsync(string name)
+	{
+		var entry = await _context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == name);
+
+		if (entry is not null)
+		{
+			_context.CdnEntries.Remove(entry);
 			await _context.SaveChangesAsync();
-			return entry;
 		}
 
-		public async ValueTask<CdnEntry?> DeleteEntryAsync(string name)
-		{
-			var entry = await _context.CdnEntries.FirstOrDefaultAsync(entry => entry.Name == name);
-
-			if (entry is not null)
-			{
-				_context.CdnEntries.Remove(entry);
-				await _context.SaveChangesAsync();
-			}
-
-			return entry;
-		}
+		return entry;
 	}
 }

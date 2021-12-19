@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Shared
+namespace Shared;
+
+public class EnvironmentVariableMissingException : Exception
 {
-	public class EnvironmentVariableMissingException : Exception
+	public EnvironmentVariableMissingException(string variable) : base(
+		$"The environment variable '{variable}' is missing.")
 	{
-		public EnvironmentVariableMissingException(string variable) : base($"The environment variable '{variable}' is missing.")
-		{
-		}
 	}
 }

@@ -1,9 +1,8 @@
 ﻿using Remora.Results;
 
-namespace Notifications.Errors
+namespace Notifications.Errors;
+
+public class UnconfiguredError : IResultError
 {
-	public class UnconfiguredError : IResultError
-	{
-		public string Message => "The request cannot be performed due to incorrect configuration.";
-	}
+	public string Message => "The request cannot be performed due to incorrect configuration.";
 }

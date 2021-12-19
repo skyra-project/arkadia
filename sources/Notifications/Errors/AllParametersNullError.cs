@@ -1,9 +1,8 @@
 ﻿using Remora.Results;
 
-namespace Notifications.Errors
+namespace Notifications.Errors;
+
+public class AllParametersNullError : IResultError
 {
-	public class AllParametersNullError : IResultError
-	{
-		public string Message => "All parameters given were null.";
-	}
+	public string Message => "All parameters given were null.";
 }

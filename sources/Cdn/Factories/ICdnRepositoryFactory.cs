@@ -1,9 +1,8 @@
 ﻿using Cdn.Repositories;
 
-namespace Cdn.Factories
+namespace Cdn.Factories;
+
+public interface ICdnRepositoryFactory
 {
-	public interface ICdnRepositoryFactory
-	{
-		ICdnRepository GetRepository();
-	}
+	ICdnRepository GetRepository();
 }
