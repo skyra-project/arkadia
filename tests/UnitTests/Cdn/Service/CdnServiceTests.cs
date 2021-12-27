@@ -53,7 +53,7 @@ public class CdnServiceTests
 
 		// assert
 
-		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Success));
 		Assert.That(returnValue.Content.ToByteArray(), Is.EqualTo(content));
 	}
 
@@ -113,7 +113,7 @@ public class CdnServiceTests
 
 		// assert
 
-		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Failure));
 	}
 
 	[Test]
@@ -167,8 +167,8 @@ public class CdnServiceTests
 
 		// assert
 
-		Assert.That(upsertResult.Result, Is.EqualTo(CdnResult.Ok));
-		Assert.That(getResult.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(upsertResult.Result, Is.EqualTo(CdnResult.Success));
+		Assert.That(getResult.Result, Is.EqualTo(CdnResult.Success));
 		Assert.That(getResult.Content.ToByteArray(), Is.EqualTo(newContent));
 	}
 
@@ -207,7 +207,7 @@ public class CdnServiceTests
 
 		// assert
 
-		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Ok));
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Success));
 		Assert.That(existsOnDisk, Is.False);
 		Assert.That(existsOnDb, Is.False);
 	}
@@ -265,6 +265,6 @@ public class CdnServiceTests
 
 		// assert
 
-		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Error));
+		Assert.That(returnValue.Result, Is.EqualTo(CdnResult.Failure));
 	}
 }
