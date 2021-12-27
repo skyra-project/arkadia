@@ -11,11 +11,11 @@ public static class ResultExtensions
 	{
 		return new YoutubeServiceResponse
 		{
-			Status = (result.IsSuccess, result.Error) switch
+			Result = (result.IsSuccess, result.Error) switch
 			{
-				(true, _) => YoutubeServiceStatus.Success,
-				(false, UnconfiguredError) => YoutubeServiceStatus.NotConfigured,
-				(false, ChannelInfoRetrievalError) => YoutubeServiceStatus.IncorrectChannelInfo,
+				(true, _) => YoutubeServiceResult.Success,
+				(false, UnconfiguredError) => YoutubeServiceResult.NotConfigured,
+				(false, ChannelInfoRetrievalError) => YoutubeServiceResult.IncorrectChannelInfo,
 				_ => throw new ArgumentOutOfRangeException()
 			}
 		};

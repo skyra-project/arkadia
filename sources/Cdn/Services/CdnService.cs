@@ -117,7 +117,7 @@ public class CdnService : global::Services.CdnService.CdnServiceBase
 	[ExcludeFromCodeCoverage]
 	private static CdnResponse Ok()
 	{
-		return new CdnResponse { Result = CdnResult.Ok };
+		return new CdnResponse { Result = CdnResult.Success };
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -129,13 +129,13 @@ public class CdnService : global::Services.CdnService.CdnServiceBase
 	[ExcludeFromCodeCoverage]
 	private static CdnResponse Error()
 	{
-		return new CdnResponse { Result = CdnResult.Error };
+		return new CdnResponse { Result = CdnResult.Failure };
 	}
 
 	[ExcludeFromCodeCoverage]
 	private static CdnFileResponse OkFile(Stream stream)
 	{
-		return new CdnFileResponse { Result = CdnResult.Ok, Content = ByteString.FromStream(stream) };
+		return new CdnFileResponse { Result = CdnResult.Success, Content = ByteString.FromStream(stream) };
 	}
 
 	[ExcludeFromCodeCoverage]
@@ -147,6 +147,6 @@ public class CdnService : global::Services.CdnService.CdnServiceBase
 	[ExcludeFromCodeCoverage]
 	private static CdnFileResponse ErrorFile()
 	{
-		return new CdnFileResponse { Result = CdnResult.Error };
+		return new CdnFileResponse { Result = CdnResult.Failure };
 	}
 }

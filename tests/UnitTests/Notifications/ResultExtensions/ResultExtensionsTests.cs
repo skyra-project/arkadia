@@ -24,7 +24,7 @@ public class ResultExtensionsTests
 
 		// assert
 
-		Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.Success));
+		Assert.That(youtubeResult.Result, Is.EqualTo(YoutubeServiceResult.Success));
 	}
 
 	[Test]
@@ -40,7 +40,7 @@ public class ResultExtensionsTests
 
 		// assert
 
-		Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.NotConfigured));
+		Assert.That(youtubeResult.Result, Is.EqualTo(YoutubeServiceResult.NotConfigured));
 	}
 
 	[Test]
@@ -56,7 +56,7 @@ public class ResultExtensionsTests
 
 		// assert
 
-		Assert.That(youtubeResult.Status, Is.EqualTo(YoutubeServiceStatus.IncorrectChannelInfo));
+		Assert.That(youtubeResult.Result, Is.EqualTo(YoutubeServiceResult.IncorrectChannelInfo));
 	}
 
 	[Test]
