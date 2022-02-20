@@ -13,7 +13,7 @@ RUN dotnet publish Cdn -p:PublishTrimmed=true -p:PublishSingleFile=true -p:Debug
 #   Runner Stage   #
 # ================ #
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
+FROM mcr.microsoft.com/dotnet/runtime-deps:7.0
 
 WORKDIR /skyra/app
 

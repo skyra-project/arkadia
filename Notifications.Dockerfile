@@ -13,7 +13,7 @@ RUN dotnet publish Notifications -p:PublishTrimmed=true -p:PublishSingleFile=tru
 #   Runner Stage   #
 # ================ #
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:6.0
+FROM mcr.microsoft.com/dotnet/runtime-deps:7.0
 
 WORKDIR /skyra/app
 
