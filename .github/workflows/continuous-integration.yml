@@ -28,7 +28,7 @@ jobs:
         with:
           submodules: true
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@499789684c9a0d41c9b3f0d66a785ba17b1d51ab # renovate: tag=v1
+        uses: actions/setup-dotnet@c0d4ad69d8bd405d234f1c9166d383b7a4f69ed8 # tag=v2
         with:
           dotnet-version: '6.0.x'
       - name: Restore CI Cache
