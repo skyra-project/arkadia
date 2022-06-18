@@ -41,7 +41,7 @@ jobs:
       - name: Run C# unit tests
         run: dotnet test tests/UnitTests --collect:"XPlat Code Coverage" --settings coverlet.runsettings -c Release
       - name: Store code coverage report (Unit Tests)
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # renovate: tag=v2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
         with:
           name: dotnet-coverage-unit
           path: tests/UnitTests/TestResults/
@@ -54,7 +54,7 @@ jobs:
         env:
           POSTGRES_DB: skyra-dotnet-test
       - name: Store code coverage report (Integration Tests)
-        uses: actions/upload-artifact@82c141cc518b40d92cc801eee768e7aafc9c2fa2 # renovate: tag=v2
+        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3
         with:
           name: dotnet-coverage-integration
           path: tests/IntegrationTests/TestResults/
